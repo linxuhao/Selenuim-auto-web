@@ -7,116 +7,64 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<TabPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.FormuleController">
-   <tabs>
-      <Tab closable="false" text="Setting">
-         <content>
-            <GridPane>
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="421.0" minWidth="10.0" prefWidth="272.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="637.0" minWidth="10.0" prefWidth="428.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-                  <GridPane prefHeight="450.0" prefWidth="396.0" GridPane.columnIndex="1">
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints maxHeight="197.0" minHeight="10.0" prefHeight="197.0" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="246.0" minHeight="10.0" prefHeight="120.0" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="277.0" minHeight="0.0" prefHeight="133.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <TitledPane animated="false" collapsible="false" text="Adresse to one of the result pages on la central">
-                          <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <TextField fx:id="urlInput" layoutX="13.0" layoutY="38.0" prefHeight="31.0" prefWidth="400.0" AnchorPane.leftAnchor="13.0" AnchorPane.rightAnchor="13.0" AnchorPane.topAnchor="25.0">
-                                       <padding>
-                                          <Insets bottom="5.0" top="5.0" />
-                                       </padding>
-                                    </TextField>
-                                    <TextField fx:id="maxNumber" layoutX="138.0" layoutY="93.0" prefHeight="31.0" prefWidth="228.0" AnchorPane.bottomAnchor="25.0" AnchorPane.rightAnchor="33.0">
-                                       <padding>
-                                          <Insets bottom="5.0" top="5.0" />
-                                       </padding>
-                                    </TextField>
-                                    <Label layoutX="14.0" layoutY="99.0" text="Max Number :" AnchorPane.leftAnchor="14.0" />
-                                 </children>
-                                 <padding>
-                                    <Insets left="10.0" right="10.0" />
-                                 </padding>
-                              </AnchorPane>
-                          </content>
-                           <padding>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-                           </padding>
-                        </TitledPane>
-                        <ScrollPane fx:id="displayPane" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1" />
-                        <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="2">
-                           <children>
-                              <Label fx:id="message" />
-                              <Button fx:id="valideButton" mnemonicParsing="false" onAction="#valide" text="Go and find me the informations !">
-                                 <VBox.margin>
-                                    <Insets />
-                                 </VBox.margin>
-                              </Button>
-                           </children>
-                           <GridPane.margin>
-                              <Insets top="50.0" />
-                           </GridPane.margin>
-                        </VBox>
-                     </children>
-                  </GridPane>
-                  <GridPane>
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints maxHeight="399.0" minHeight="10.0" prefHeight="397.0" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="186.0" minHeight="10.0" prefHeight="53.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
-                           <children>
-                              <Button fx:id="addButton" mnemonicParsing="false" onAction="#add" text="+">
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.FormuleController">
+	<tabs>
+		<Tab closable="false" text="Setting">
+			<content>
+				<ScrollPane prefHeight="200.0" prefWidth="200.0">
+					<content>
+						<GridPane prefHeight="760.0" prefWidth="1273.0">
+							<columnConstraints>
+								<ColumnConstraints hgrow="ALWAYS" maxWidth="1721.0" minWidth="10.0" prefWidth="1097.0" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints maxHeight="706.0" minHeight="10.0" prefHeight="676.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="212.0" minHeight="10.0" prefHeight="84.0" vgrow="SOMETIMES" />
+							</rowConstraints>
+							<children>
+										<HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
+											<children>
+												<Button fx:id="addButton" mnemonicParsing="false" onAction="#add" text="+">
+													<HBox.margin>
+														<Insets left="5.0" top="10.0" />
+													</HBox.margin>
+												</Button>
+												<Button fx:id="removeButton" mnemonicParsing="false" onAction="#remove" text="-">
+													<HBox.margin>
+														<Insets left="5.0" top="10.0" />
+													</HBox.margin>
+												</Button>
+												<Button fx:id="loadButton" mnemonicParsing="false" onAction="#loadFromFile" text="Load">
+                                 <HBox.margin>
+                                    <Insets left="50.0" top="10.0" />
+                                 </HBox.margin></Button>
+												<Button fx:id="saveButton" mnemonicParsing="false" onAction="#saveToFile" text="Save">
                                  <HBox.margin>
                                     <Insets left="5.0" top="10.0" />
-                                 </HBox.margin>
-                              </Button>
-                              <Button fx:id="removeButton" mnemonicParsing="false" onAction="#remove" text="-">
+                                 </HBox.margin></Button>
+										<Button fx:id="startButton" mnemonicParsing="false" onAction="#startTask" text="Start">
                                  <HBox.margin>
-                                    <Insets left="5.0" top="10.0" />
-                                 </HBox.margin>
-                              </Button>
-                           </children>
-                        </HBox>
-                        <VBox prefHeight="355.0" prefWidth="134.0">
-                           <children>
-                              <TitledPane animated="false" collapsible="false" prefHeight="401.0" prefWidth="259.0" text="Informations you want from cars">
-                                 <padding>
-                                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-                                 </padding>
-                                 <content>
-                                    <AnchorPane>
-                                       <padding>
-                                          <Insets left="10.0" right="10.0" />
-                                       </padding>
-                                       <children>
-                                          <VBox fx:id="fieldZone" layoutX="61.0" layoutY="51.0" prefHeight="350.0" prefWidth="237.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                       </children>
-                                    </AnchorPane>
-                                 </content>
-                              </TitledPane>
-                           </children></VBox>
-                     </children>
-                  </GridPane>
-               </children>
-            </GridPane>
-         </content>
-      </Tab>
-   </tabs>
+                                    <Insets left="50.0" top="10.0" />
+                                 </HBox.margin></Button>
+											</children>
+										</HBox>
+										<VBox prefHeight="355.0" prefWidth="134.0">
+											<children>
+												<TitledPane animated="false" collapsible="false" prefHeight="674.0" prefWidth="1097.0" text="Actions">
+													<padding>
+														<Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+													</padding>
+													<content>
+														<ScrollPane fx:id="displayPane" fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" />
+													</content>
+												</TitledPane>
+											</children>
+										</VBox>
+							</children>
+						</GridPane>
+					</content>
+				</ScrollPane>
+			</content>
+		</Tab>
+	</tabs>
 </TabPane>

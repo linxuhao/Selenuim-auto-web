@@ -36,7 +36,7 @@ public class AutoWebApplication extends Application {
         //add all elements
         
         Scene scene = new Scene(root);
-        primaryStage.setTitle("A gentil small cute Spider");
+        primaryStage.setTitle("Automatic Web Task");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
