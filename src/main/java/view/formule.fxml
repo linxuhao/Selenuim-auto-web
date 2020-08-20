@@ -54,7 +54,7 @@
                                           <Insets left="5.0" top="10.0" />
                                        </HBox.margin>
                                     </Button>
-      										<Button fx:id="startButton" mnemonicParsing="false" onAction="#startTask" text="Start">
+                                    <Button fx:id="startButton" mnemonicParsing="false" onAction="#startTask" text="Start">
                                        <HBox.margin>
                                           <Insets left="50.0" top="10.0" />
                                        </HBox.margin>

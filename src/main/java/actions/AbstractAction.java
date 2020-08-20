@@ -3,13 +3,18 @@ package actions;
 import java.lang.System.Logger.Level;
 import java.time.LocalTime;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+
+import org.openqa.selenium.WebDriver;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import constants.ActionType;
 import controller.ActionInput;
 import customExceptions.LoggedException;
+import utils.TimeUtils;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @JsonSubTypes({
@@ -18,6 +23,8 @@ import customExceptions.LoggedException;
 })
 public abstract class AbstractAction {
 
+	@JsonIgnore
+	private WebDriver webDriver;
 	private String executionTime;
 	private ActionType actionType;
 	private String target;
@@ -28,14 +35,24 @@ public abstract class AbstractAction {
 
 	public AbstractAction(final String executionTime, final ActionType actionType, final String target) {
 		super();
+		this.webDriver = null;
 		this.executionTime = executionTime;
 		this.actionType = actionType;
 		this.target = target;
 	}
+	
+	@JsonIgnore
+	public WebDriver getWebDriver() {
+		return webDriver;
+	}
+
+	public void setWebDriver(WebDriver webDriver) {
+		this.webDriver = webDriver;
+	}
 
 	@JsonIgnore
 	public final LocalTime getExecutionTimeAsLocalTime() {
-		return toLocalTime(executionTime);
+		return TimeUtils.toLocalTime(executionTime);
 	}
 	
 	public final String getExecutionTime() {
@@ -84,20 +101,14 @@ public abstract class AbstractAction {
 
 	protected abstract ActionInput populateInputNext(final ActionInput input);
 
-	public abstract void doAction();
-	
-
-	LocalTime toLocalTime(String time) {
-		try {
-			final String[] timeSequence = time.split(ActionInput.TIME_DELIMITER);
-			return LocalTime.of(Integer.parseInt(timeSequence[0]), Integer.parseInt(timeSequence[1]),
-					Integer.parseInt(timeSequence[2]));
-		} catch (Exception e) {
-			final String reason = "unknow execution time, execution will not wait its execution time (it doesn't have one)";
-			throw new LoggedException(Level.INFO, String.format(ActionInput.INFO_MESSAGE_TEMPLATE, reason, toString()));
+	public void doAction(final BiConsumer<Level, String> logConsumer) {
+		if(null == webDriver) {
+			throw new LoggedException(Level.ERROR, "No web driver set");
 		}
-
+		doSubAction(logConsumer);
 	}
 	
+	protected abstract void doSubAction(final BiConsumer<Level, String> logConsumer);
+
 
 }

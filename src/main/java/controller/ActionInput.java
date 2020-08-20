@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.lang.System.Logger.Level;
 
 import actions.AbstractAction;
-import actions.ActionType;
 import actions.ActionWithContent;
 import actions.ActionWithNextCondition;
-import actions.NextConditionType;
+import constants.ActionType;
+import constants.NextConditionType;
 import customExceptions.LoggedException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,13 +18,10 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import utils.LogUtils;
 
 public class ActionInput extends VBox {
-
-	public static final String TIME_DELIMITER = ":";
-	public static final String INFO_MESSAGE_TEMPLATE = "%s, the action will be executed\n The action is : %s";
-	public static final String WARNING_MESSAGE_TEMPALTE = "%s, the action input is incomplete, it is not executed and ignored \n The action input is : %s";
-
+	
 	@FXML
 	private ComboBox<ActionType> actionTypeSelect;
 	@FXML
@@ -140,7 +137,7 @@ public class ActionInput extends VBox {
 
 	private void onActionTypeChanged() {
 		switch (actionTypeSelect.getSelectionModel().getSelectedItem()) {
-		case OPEN:
+		case NAVIGATE:
 		case CLICK:
 			displayNextConditionBlock();
 			hideContent();
@@ -183,31 +180,26 @@ public class ActionInput extends VBox {
 		final NextConditionType nextConditionType = this.nextConditionTypeSelect.getSelectionModel().getSelectedItem();
 		String targetString = target.getText();
 		if (targetString.isBlank()) {
-			final String reason = "No target ID Specified";
-			throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+			final String reason = "No target locator Specified";
+			throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
 		}
 		switch (actionType) {
 		case CLICK:
-		case OPEN:
+		case NAVIGATE:
 			String nextConditionString = nextCondition.getText();
 			if (NextConditionType.NO_CONDITION != nextConditionType && nextConditionString.isBlank()) {
 				final String reason = "No Next Condition specified (Http code or delay in millisecond)";
-				throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+				throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
 			}
 			action = new ActionWithNextCondition(time.getText(), actionType, targetString, nextConditionType,
 					nextConditionString, retryIfNotNext.isSelected());
 			break;
 		case FILL:
-			String contentString = content.getText();
-			if (contentString.isBlank()) {
-				final String reason = "No content to fill specified";
-				throw createLoggedException(Level.INFO, INFO_MESSAGE_TEMPLATE, reason);
-			}
-			action = new ActionWithContent(time.getText(), targetString, contentString);
+			action = new ActionWithContent(time.getText(), targetString, content.getText());
 			break;
 		default:
 			final String reason = "Unsupported actionType : " + actionType;
-			throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+			throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
 		}
 		return action;
 	}

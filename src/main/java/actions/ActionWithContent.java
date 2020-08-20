@@ -1,8 +1,13 @@
 package actions;
 
+import java.lang.System.Logger.Level;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
+import constants.ActionType;
 import controller.ActionInput;
+import utils.LogUtils;
+import utils.WebDriverUtils;
 
 public class ActionWithContent extends AbstractAction {
 	
@@ -49,9 +54,14 @@ public class ActionWithContent extends AbstractAction {
 	
 
 	@Override
-	public void doAction() {
-		// TODO Auto-generated method stub
-
+	public void doSubAction(final BiConsumer<Level, String> logConsumer) {
+		if (content.isBlank()) {
+			final String reason = "No content to fill specified";
+			if(null != logConsumer) {
+				logConsumer.accept(Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
+			}
+		}
+		WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
 	}
 	
 	@Override

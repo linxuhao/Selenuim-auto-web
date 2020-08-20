@@ -14,6 +14,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import utils.WebDriverUtils;
 
 /**
  *
@@ -45,6 +46,7 @@ public class AutoWebApplication extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+    	WebDriverUtils.setWebDriverSystemProperty();
         launch(args);
     }
     

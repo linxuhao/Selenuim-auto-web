@@ -6,10 +6,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import org.openqa.selenium.WebDriver;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import actions.AbstractAction;
-import actions.ActionList;
 import customExceptions.LoggedException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,10 +21,12 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import model.FormuleModel;
+import utils.LogUtils;
+import utils.WebDriverUtils;
 
 public class FormuleController {
 
@@ -52,6 +57,8 @@ public class FormuleController {
 	private VBox fieldZone;
 
 	public Stage primaryStage;
+
+	private FormuleModel model = new FormuleModel();
 
 	public void initialize() {
 		fieldZone = new VBox();
@@ -99,19 +106,6 @@ public class FormuleController {
 	}
 
 	@FXML
-	void startTask(ActionEvent event) {
-		disactiveButtons();
-		final List<AbstractAction> actionList = getActionList();
-		addLog(Level.INFO, "There are total of " + actionList.size() + " actions to execute");
-		for (int i = 0; i < actionList.size(); i++) {
-			addLog(Level.DEBUG, "Executing action " + (i + 1) + " out of " + actionList.size());
-			actionList.get(i).doAction();
-		}
-		addLog(Level.INFO, "Execution finished");
-		activateButtons();
-	}
-
-	@FXML
 	void loadFromFile(ActionEvent event) throws Exception {
 		disactiveButtons();
 		FileChooser fileChooser = new FileChooser();
@@ -120,9 +114,9 @@ public class FormuleController {
 		try {
 			if (null != file) {
 				final ObjectMapper mapper = getObjectMapper();
-				List<AbstractAction> actionList = mapper.readValue(file, ActionList.class).getActionList();
-				fieldZone.getChildren().clear();
-				fieldZone.getChildren().addAll(loadFromObjectList(actionList));
+				FormuleModel model = mapper.readValue(file, FormuleModel.class);
+				this.model = model;
+				updateFromModel();
 				addLog(Level.DEBUG, "Configuration file load succed");
 			}
 		} catch (Exception e) {
@@ -150,40 +144,51 @@ public class FormuleController {
 	@FXML
 	void saveToFile(ActionEvent event) throws Exception {
 		disactiveButtons();
-		final List<AbstractAction> actionList = getActionList();
-		if (!actionList.isEmpty()) {
-			FileChooser fileChooser = new FileChooser();
-			fileChooser.setTitle("Save Configuration file");
-			File file = fileChooser.showSaveDialog(primaryStage);
+		try {
+			//Not saving web driver to json, so no need to set it in actions
+			final List<AbstractAction> actionList = getActionList(null);
+			if (!actionList.isEmpty()) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Save Configuration file");
+				File file = fileChooser.showSaveDialog(primaryStage);
 
-			try {
 				if (null != file) {
 					final ObjectMapper mapper = getObjectMapper();
-					final ActionList actionListToSerialize = new ActionList(actionList);
-
+					updateToModel();
 					addLog(Level.DEBUG, "Saving configuration to file : " + file.getAbsolutePath());
-					mapper.writeValue(file, actionListToSerialize);
+					mapper.writeValue(file, model);
 				}
-			} catch (Exception e) {
-				addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
-				throw e;
-			} finally {
-				activateButtons();
+			} else {
+				addLog(Level.DEBUG, "No action to save");
 			}
-
-		} else {
-			addLog(Level.DEBUG, "No action to save");
+		} catch (Exception e) {
+			addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
+			throw e;
+		} finally {
 			activateButtons();
 		}
 	}
 
-	private List<AbstractAction> getActionList() {
+	private void updateFromModel() {
+		fieldZone.getChildren().clear();
+		fieldZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
+	}
+	
+	private void updateToModel() {
+		this.model.setActionList(getActionList(null));
+	}
+
+	private List<AbstractAction> getActionList(@Nullable final WebDriver webDriver) {
 		final List<AbstractAction> actionList = new ArrayList<>();
 		for (Node node : fieldZone.getChildrenUnmodifiable()) {
 			if (node instanceof ActionInput) {
 				final ActionInput actionInput = (ActionInput) node;
 				try {
-					actionList.add(actionInput.toAction());
+					final AbstractAction action = actionInput.toAction();
+					if(null != webDriver) {
+						action.setWebDriver(webDriver);
+					}
+					actionList.add(action);
 				} catch (LoggedException e) {
 					addLog(e.getLogLevel(), e.getMessage());
 					if (Level.ERROR == e.getLogLevel()) {
@@ -197,33 +202,42 @@ public class FormuleController {
 
 	@FXML
 	void clearLog(ActionEvent event) {
-		logConsole.getChildren().clear();
+		LogUtils.clearLog(logConsole);
 	}
 
 	public final void addLog(Level level, String message) {
-		if (null != logConsole) {
-			String style = "-fx-fill: ";
-			switch (level) {
-			case ERROR:
-				style += "red; -fx-font-weight: bolder;";
-				break;
-			case WARNING:
-				style += "darkorange;-fx-font-weight: bold;";
-				break;
-			case INFO:
-				style += "black;";
-				break;
-			case DEBUG:
-				style += "blueviolet;";
-				break;
-			default:
-				style += "navy;";
-				break;
+		LogUtils.addLog(logConsole, level, message);
+	}
+	
+	@FXML
+	void startTask(ActionEvent event) {
+		disactiveButtons();
+		try {
+			final WebDriver webDriver = WebDriverUtils.getWebDriver();
+			webDriver.get("https://www.google.com/");
+			WebDriverUtils.getHttpCode(webDriver);
+			final List<AbstractAction> actionList = getActionList(webDriver);
+			addLog(Level.INFO, "There are total of " + actionList.size() + " actions to execute");
+			for (int i = 0; i < actionList.size(); i++) {
+				addLog(Level.DEBUG, "Executing action " + (i + 1) + " out of " + actionList.size());
+				try {
+					actionList.get(i).doAction((level, message) -> addLog(level, message));
+				} catch (LoggedException e) {
+					// Stops the execution if is error level exception,
+					// otherwise stop & skip only the current action
+					if (Level.ERROR == e.getLogLevel()) {
+						throw e;
+					} else {
+						addLog(e.getLogLevel(), e.getMessage());
+					}
+				}
 			}
-			final Text logText = new Text();
-			logText.setStyle(style);
-			logText.setText(">> " + level + ", " + message + "\n\n");
-			logConsole.getChildren().add(logText);
+		} catch (Exception e) {
+			addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
+			throw e;
+		} finally {
+			addLog(Level.INFO, "Execution finished");
+			activateButtons();
 		}
 	}
 

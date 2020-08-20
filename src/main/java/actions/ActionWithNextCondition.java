@@ -1,8 +1,14 @@
 package actions;
 
+import java.lang.System.Logger.Level;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
+import constants.ActionType;
+import constants.NextConditionType;
 import controller.ActionInput;
+import customExceptions.LoggedException;
+import utils.WebDriverUtils;
 
 public class ActionWithNextCondition extends AbstractAction{
 	
@@ -66,9 +72,19 @@ public class ActionWithNextCondition extends AbstractAction{
 	
 
 	@Override
-	public void doAction() {
-		// TODO Auto-generated method stub
-		
+	public void doSubAction(final BiConsumer<Level, String> logConsumer) {
+		final boolean wantHttpCode = NextConditionType.HTTP_CODE == getNextConditionType();
+		int httpCode = -1;
+		switch (getActionType()) {
+		case NAVIGATE:
+			httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget(), wantHttpCode);
+			break;
+		case CLICK:
+			httpCode = WebDriverUtils.click(getWebDriver(), getTarget(), wantHttpCode);
+			break;
+		default:
+			throw new LoggedException(Level.ERROR, "Unsupported action type: " + getActionType() + " for the class: " + getClass());
+		}
 	}
 
 	@Override
