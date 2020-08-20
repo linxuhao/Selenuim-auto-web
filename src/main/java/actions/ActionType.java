@@ -1,8 +1,7 @@
-package Actions;
+package actions;
 
 public enum ActionType {
 	OPEN,
 	CLICK,
-	FILL,
-	DELAY
+	FILL
 }

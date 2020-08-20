@@ -1,84 +1,229 @@
 package controller;
 
 import java.io.IOException;
+import java.lang.System.Logger.Level;
 
-import Actions.ActionType;
+import actions.AbstractAction;
+import actions.ActionType;
+import actions.ActionWithContent;
+import actions.ActionWithNextCondition;
+import actions.NextConditionType;
+import customExceptions.LoggedException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
-public class ActionInput extends HBox{
+public class ActionInput extends VBox {
 
-	@FXML 
+	public static final String TIME_DELIMITER = ":";
+	public static final String INFO_MESSAGE_TEMPLATE = "%s, the action will be executed\n The action is : %s";
+	public static final String WARNING_MESSAGE_TEMPALTE = "%s, the action input is incomplete, it is not executed and ignored \n The action input is : %s";
+
+	@FXML
 	private ComboBox<ActionType> actionTypeSelect;
-	@FXML 
+	@FXML
 	private Label timeLabel;
-	@FXML 
-	private Label timeLabel1;
-	@FXML 
-	private Label timeLabel2;
-	@FXML 
-	private TextField hours;
-	@FXML 
-	private TextField minutes;
-	@FXML 
-	private TextField seconds;
-	@FXML 
+	@FXML
+	private TextField time;
+	@FXML
 	private Label targetLabel;
-	@FXML 
+	@FXML
 	private TextField target;
-	@FXML 
+	@FXML
 	private Label contentLabel;
-	@FXML 
+	@FXML
 	private TextField content;
+	@FXML
+	private Label nextConditionTypeSelectLabel;
+	@FXML
+	private ComboBox<NextConditionType> nextConditionTypeSelect;
+	@FXML
+	private Label nextConditionLabel;
+	@FXML
+	private TextField nextCondition;
+	@FXML
+	private CheckBox retryIfNotNext;
 
-    public ActionInput() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/action.fxml"));
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setController(this);
+	public ActionInput() {
+		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/action.fxml"));
+		fxmlLoader.setRoot(this);
+		fxmlLoader.setController(this);
 
-        try {
-            fxmlLoader.load();
-            actionTypeSelect.getItems().addAll(ActionType.values());
-            actionTypeSelect.getSelectionModel().selectFirst();
-            onActionTypeChanged();
-        } catch (IOException exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-    
-    @FXML
-    void onActionTypeChange(ActionEvent event) {
-    	System.out.println("changed to " + actionTypeSelect.getSelectionModel().getSelectedItem());
-    	onActionTypeChanged();
-    }
+		try {
+			fxmlLoader.load();
+			actionTypeSelect.getItems().addAll(ActionType.values());
+			actionTypeSelect.getSelectionModel().selectFirst();
+			nextConditionTypeSelect.getItems().addAll(NextConditionType.values());
+			nextConditionTypeSelect.getSelectionModel().selectFirst();
+			refreshComponent();
+		} catch (IOException exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public final void setActionType(ActionType actionType) {
+		this.actionTypeSelect.getSelectionModel().select(actionType);
+	}
+
+	public final void setExecutionTime(String executionTime) {
+		this.time.setText(executionTime);
+	}
+
+	public final void setTarget(String target) {
+		this.target.setText(target);
+	}
+
+	public final void setContent(String content) {
+		this.content.setText(content);
+	}
+
+	public final void setNextConditionType(NextConditionType nextConditionType) {
+		this.nextConditionTypeSelect.getSelectionModel().select(nextConditionType);
+	}
+
+	public final void setNextCondition(String nextCondition) {
+		this.nextCondition.setText(nextCondition);
+	}
+
+	public final void setRetryIfNotNext(boolean retry) {
+		this.retryIfNotNext.setSelected(retry);
+	}
+
+	public final void refreshComponent() {
+		onActionTypeChanged();
+		onNextConditionTypeChanged();
+	}
+
+	@FXML
+	void onActionTypeChange(ActionEvent event) {
+		System.out.println("changed to " + actionTypeSelect.getSelectionModel().getSelectedItem());
+		refreshComponent();
+	}
+
+	@FXML
+	void onNextConditionTypeChange(ActionEvent event) {
+		System.out.println("changed to " + nextConditionTypeSelect.getSelectionModel().getSelectedItem());
+		onNextConditionTypeChanged();
+	}
+
+	private void onNextConditionTypeChanged() {
+		if (nextConditionTypeSelect.isVisible()) {
+			switch (nextConditionTypeSelect.getSelectionModel().getSelectedItem()) {
+			case HTTP_CODE:
+			case DELAY_MILISECONDS:
+				displayNextConditionContent();
+				break;
+			case NO_CONDITION:
+				hideNextConditionContent();
+			default:
+				break;
+
+			}
+		} else {
+			hideNextConditionContent();
+		}
+	}
+
+	private void hideNextConditionContent() {
+		changeComponenetsVisibility(false, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void displayNextConditionContent() {
+		changeComponenetsVisibility(true, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
 
 	private void onActionTypeChanged() {
-		switch(actionTypeSelect.getSelectionModel().getSelectedItem()) {
-    	case OPEN:
-    	case CLICK:
-    	case DELAY:
-    		hideContentInput();
-    		break;
-      	case FILL:
-		default:
-			showContentInput();
+		switch (actionTypeSelect.getSelectionModel().getSelectedItem()) {
+		case OPEN:
+		case CLICK:
+			displayNextConditionBlock();
+			hideContent();
 			break;
-    	
-    	}
+		case FILL:
+			hideNextConditionBlock();
+			displayContent();
+			break;
+		default:
+			break;
+
+		}
 	}
 
-	private void showContentInput() {
-		contentLabel.setVisible(true);
-		content.setVisible(true);
+	private void displayContent() {
+		changeComponenetsVisibility(true, contentLabel, content);
 	}
 
-	private void hideContentInput() {
-		contentLabel.setVisible(false);
-		content.setVisible(false);
+	private void hideContent() {
+		changeComponenetsVisibility(false, contentLabel, content);
 	}
+
+	private void hideNextConditionBlock() {
+		changeComponenetsVisibility(false, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void displayNextConditionBlock() {
+		changeComponenetsVisibility(true, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void changeComponenetsVisibility(boolean visibility, Control... components) {
+		for (Control component : components) {
+			component.setVisible(visibility);
+		}
+	}
+
+	public final AbstractAction toAction() {
+		AbstractAction action = null;
+		final ActionType actionType = this.actionTypeSelect.getSelectionModel().getSelectedItem();
+		final NextConditionType nextConditionType = this.nextConditionTypeSelect.getSelectionModel().getSelectedItem();
+		String targetString = target.getText();
+		if (targetString.isBlank()) {
+			final String reason = "No target ID Specified";
+			throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+		}
+		switch (actionType) {
+		case CLICK:
+		case OPEN:
+			String nextConditionString = nextCondition.getText();
+			if (NextConditionType.NO_CONDITION != nextConditionType && nextConditionString.isBlank()) {
+				final String reason = "No Next Condition specified (Http code or delay in millisecond)";
+				throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+			}
+			action = new ActionWithNextCondition(time.getText(), actionType, targetString, nextConditionType,
+					nextConditionString, retryIfNotNext.isSelected());
+			break;
+		case FILL:
+			String contentString = content.getText();
+			if (contentString.isBlank()) {
+				final String reason = "No content to fill specified";
+				throw createLoggedException(Level.INFO, INFO_MESSAGE_TEMPLATE, reason);
+			}
+			action = new ActionWithContent(time.getText(), targetString, contentString);
+			break;
+		default:
+			final String reason = "Unsupported actionType : " + actionType;
+			throw createLoggedException(Level.WARNING, WARNING_MESSAGE_TEMPALTE, reason);
+		}
+		return action;
+	}
+
+	private LoggedException createLoggedException(final Level level, final String messageTemplate,
+			final String reason) {
+		return new LoggedException(level, String.format(messageTemplate, reason, toString()));
+	}
+
+	@Override
+	public String toString() {
+		return "ActionInput [actionTypeSelect=" + actionTypeSelect.getSelectionModel().getSelectedItem() + ", time="
+				+ time.getText() + ", target=" + target.getText() + ", content=" + content.getText()
+				+ ", nextConditionTypeSelect=" + nextConditionTypeSelect.getSelectionModel().getSelectedItem()
+				+ ", nextCondition=" + nextCondition.getText() + ", retryIfNotNext=" + retryIfNotNext.isSelected()
+				+ "]";
+	}
+
 }

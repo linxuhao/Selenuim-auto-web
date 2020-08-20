@@ -7,42 +7,68 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.HBox?>
 
-<fx:root alignment="CENTER" type="HBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+
+<fx:root type="VBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <ComboBox fx:id="actionTypeSelect" onAction="#onActionTypeChange" prefWidth="150.0">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </ComboBox>
-      <Label fx:id="timeLabel" text="Time (hh:mm:ss)">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </Label>
-      <TextField fx:id="hours" prefHeight="31.0" prefWidth="41.0" />
-      <Label fx:id="timeLabel1" text=" : " />
-      <TextField fx:id="minutes" prefHeight="31.0" prefWidth="41.0" />
-      <Label fx:id="timeLabel2" text=" : " />
-      <TextField fx:id="seconds" prefHeight="31.0" prefWidth="41.0">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </TextField>
-      <Label fx:id="targetLabel" text="Target">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </Label>
-      <TextField fx:id="target">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </TextField>
-      <Label fx:id="contentLabel" text="Content">
-         <HBox.margin>
-            <Insets right="10.0" />
-         </HBox.margin>
-      </Label>
-      <TextField fx:id="content" />
+      <HBox alignment="CENTER">
+         <children>
+            <ComboBox fx:id="actionTypeSelect" onAction="#onActionTypeChange" prefWidth="150.0">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </ComboBox>
+            <Label fx:id="timeLabel" text="Time (hh:mm:ss)">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="time" prefHeight="31.0" prefWidth="130.0">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Label fx:id="targetLabel" text="Target">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="target">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Label fx:id="contentLabel" text="Content">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="content" />
+         </children>
+      </HBox>
+      <HBox alignment="CENTER" prefHeight="30.0" prefWidth="919.0">
+         <children>
+            <Label fx:id="nextConditionTypeSelectLabel" text="Condition to next action">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <ComboBox fx:id="nextConditionTypeSelect" onAction="#onNextConditionTypeChange" prefWidth="150.0">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </ComboBox>
+            <Label fx:id="nextConditionLabel" text="Condition">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="nextCondition">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <CheckBox fx:id="retryIfNotNext" mnemonicParsing="false" text="Retry if not next" />
+         </children>
+      </HBox>
    </children>
 </fx:root>
