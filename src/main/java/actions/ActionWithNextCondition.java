@@ -70,14 +70,15 @@ public class ActionWithNextCondition extends AbstractAction{
 				+ getTarget() + ", getActionType()=" + getActionType() + "]";
 	}
 	
-
 	@Override
-	public void doSubAction(final BiConsumer<Level, String> logConsumer) {
+	public void doSubAction(final BiConsumer<Level, String> logConsumer) throws Exception {
 		final boolean wantHttpCode = NextConditionType.HTTP_CODE == getNextConditionType();
 		int httpCode = -1;
 		switch (getActionType()) {
 		case NAVIGATE:
+			produceLog(logConsumer, Level.DEBUG, "Navigating to " + getTarget());
 			httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget(), wantHttpCode);
+			retryOnCondition(logConsumer, httpCode);
 			break;
 		case CLICK:
 			httpCode = WebDriverUtils.click(getWebDriver(), getTarget(), wantHttpCode);
@@ -85,6 +86,38 @@ public class ActionWithNextCondition extends AbstractAction{
 		default:
 			throw new LoggedException(Level.ERROR, "Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
+	}
+
+	private void retryOnCondition(final BiConsumer<Level, String> logConsumer, int httpCode)
+			throws InterruptedException, Exception {
+		boolean succed = evaluateNextCondition(httpCode);
+		boolean httpCodeNotFound = WebDriverUtils.HTTP_CODE_URL_NOT_FOUND == httpCode;
+		if(httpCodeNotFound) {
+			produceLog(logConsumer, Level.WARNING, "The http code of " + getWebDriver().getCurrentUrl() + " is not found");
+		}else {
+			if(retryIfNotNext && !succed) {
+				produceLog(logConsumer, Level.DEBUG, "The http code of " + getWebDriver().getCurrentUrl() + " is " + httpCode + "\nWhich is not " + nextCondition + ", retrying");
+				doSubAction(logConsumer);
+			}
+		}
+	}
+
+	private boolean evaluateNextCondition(final int httpCode) throws NumberFormatException, InterruptedException {
+		boolean result = false;
+		switch (getNextConditionType()) {
+		case HTTP_CODE:
+			if(Integer.parseInt(nextCondition) == httpCode) {
+				result = true;
+			}
+			break;
+		case DELAY_MILISECONDS:
+			Thread.sleep(Integer.parseInt(nextCondition));
+		case NO_CONDITION:
+		default:
+			result = true;
+			break;
+		}
+		return result;
 	}
 
 	@Override

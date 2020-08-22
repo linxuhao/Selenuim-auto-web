@@ -5,6 +5,8 @@ import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import javax.annotation.Nullable;
 
@@ -14,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import actions.AbstractAction;
 import customExceptions.LoggedException;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -72,7 +75,6 @@ public class FormuleController {
 		loadButton.setDisable(false);
 		saveButton.setDisable(false);
 		startButton.setDisable(false);
-		clearLogButton.setDisable(false);
 	}
 
 	public final void disactiveButtons() {
@@ -81,7 +83,6 @@ public class FormuleController {
 		loadButton.setDisable(true);
 		saveButton.setDisable(true);
 		startButton.setDisable(true);
-		clearLogButton.setDisable(true);
 	}
 
 	private void addNewInputField() {
@@ -108,24 +109,29 @@ public class FormuleController {
 	@FXML
 	void loadFromFile(ActionEvent event) throws Exception {
 		disactiveButtons();
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Load Configuration File");
+		FileChooser fileChooser = getFileChooser("Load Configuration file");
 		File file = fileChooser.showOpenDialog(primaryStage);
-		try {
-			if (null != file) {
-				final ObjectMapper mapper = getObjectMapper();
-				FormuleModel model = mapper.readValue(file, FormuleModel.class);
-				this.model = model;
-				updateFromModel();
-				addLog(Level.DEBUG, "Configuration file load succed");
-			}
-		} catch (Exception e) {
-			addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
-			throw e;
-		} finally {
-			activateButtons();
+		if (null != file) {
+			CompletableFuture.runAsync(() -> {
+				// Read file in another thread for UI responsiveness
+				try {
+					final ObjectMapper mapper = getObjectMapper();
+					FormuleModel model = mapper.readValue(file, FormuleModel.class);
+					this.model = model;
+					Platform.runLater(() -> updateFromModel());
+				} catch (Exception e) {
+					addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+					throw new CompletionException(e);
+				}
+			}).whenComplete((i, t) -> threadJobCompleted("Configuration file load succed"));
+		} else {
+			taskCancelled("No file to load selected");
 		}
+	}
 
+	private void threadJobCompleted(String completionMessage) {
+		addLogLater(Level.DEBUG, completionMessage);
+		Platform.runLater(() -> activateButtons());
 	}
 
 	private ObjectMapper getObjectMapper() {
@@ -145,35 +151,54 @@ public class FormuleController {
 	void saveToFile(ActionEvent event) throws Exception {
 		disactiveButtons();
 		try {
-			//Not saving web driver to json, so no need to set it in actions
+			// Not saving web driver to json, so no need to set it in actions
 			final List<AbstractAction> actionList = getActionList(null);
 			if (!actionList.isEmpty()) {
-				FileChooser fileChooser = new FileChooser();
-				fileChooser.setTitle("Save Configuration file");
+				FileChooser fileChooser = getFileChooser("Save Configuration file");
 				File file = fileChooser.showSaveDialog(primaryStage);
-
+				updateToModel();
 				if (null != file) {
-					final ObjectMapper mapper = getObjectMapper();
-					updateToModel();
 					addLog(Level.DEBUG, "Saving configuration to file : " + file.getAbsolutePath());
-					mapper.writeValue(file, model);
+					CompletableFuture.runAsync(() -> {
+						// Write to file in another thread to not block UI
+						// Even though i blocked all buttons when writting xD
+						try {
+							final ObjectMapper mapper = getObjectMapper();
+							mapper.writeValue(file, model);
+						} catch (Exception e) {
+							addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+							throw new CompletionException(e);
+						}
+					}).whenComplete((i, t) -> threadJobCompleted("Configuration file save succed"));
+				} else {
+					taskCancelled("No file to save selected");
 				}
 			} else {
-				addLog(Level.DEBUG, "No action to save");
+				taskCancelled("No action to save");
 			}
 		} catch (Exception e) {
-			addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
-			throw e;
-		} finally {
+			addLog(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
 			activateButtons();
+			throw e;
 		}
+	}
+
+	private void taskCancelled(String cancelMessage) {
+		addLog(Level.DEBUG, cancelMessage);
+		activateButtons();
+	}
+
+	private FileChooser getFileChooser(String fileChooserName) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(fileChooserName);
+		return fileChooser;
 	}
 
 	private void updateFromModel() {
 		fieldZone.getChildren().clear();
 		fieldZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
 	}
-	
+
 	private void updateToModel() {
 		this.model.setActionList(getActionList(null));
 	}
@@ -185,12 +210,12 @@ public class FormuleController {
 				final ActionInput actionInput = (ActionInput) node;
 				try {
 					final AbstractAction action = actionInput.toAction();
-					if(null != webDriver) {
+					if (null != webDriver) {
 						action.setWebDriver(webDriver);
 					}
 					actionList.add(action);
 				} catch (LoggedException e) {
-					addLog(e.getLogLevel(), e.getMessage());
+					addLogLater(e.getLogLevel(), e.getMessage());
 					if (Level.ERROR == e.getLogLevel()) {
 						throw e;
 					}
@@ -208,37 +233,43 @@ public class FormuleController {
 	public final void addLog(Level level, String message) {
 		LogUtils.addLog(logConsole, level, message);
 	}
-	
+
+	public final void addLogLater(Level level, String message) {
+		Platform.runLater(() -> addLog(level, message));
+	}
+
 	@FXML
-	void startTask(ActionEvent event) {
+	void startTask(ActionEvent event) throws Exception {
 		disactiveButtons();
-		try {
-			final WebDriver webDriver = WebDriverUtils.getWebDriver();
-			webDriver.get("https://www.google.com/");
-			WebDriverUtils.getHttpCode(webDriver);
-			final List<AbstractAction> actionList = getActionList(webDriver);
-			addLog(Level.INFO, "There are total of " + actionList.size() + " actions to execute");
-			for (int i = 0; i < actionList.size(); i++) {
-				addLog(Level.DEBUG, "Executing action " + (i + 1) + " out of " + actionList.size());
-				try {
-					actionList.get(i).doAction((level, message) -> addLog(level, message));
-				} catch (LoggedException e) {
-					// Stops the execution if is error level exception,
-					// otherwise stop & skip only the current action
-					if (Level.ERROR == e.getLogLevel()) {
-						throw e;
-					} else {
-						addLog(e.getLogLevel(), e.getMessage());
+		CompletableFuture.runAsync(() -> {
+			try {
+				final WebDriver webDriver = WebDriverUtils.getNewWebDriver();
+				webDriver.get("https://www.google.com");
+				WebDriverUtils.getHttpCode(webDriver);
+				final List<AbstractAction> actionList = getActionList(webDriver);
+				addLogLater(Level.DEBUG, "There are total of " + actionList.size() + " actions to execute");
+				for (int i = 0; i < actionList.size(); i++) {
+					final int humainReadableActionIndex = i + 1;
+					addLogLater(Level.DEBUG,
+							"Executing action " + humainReadableActionIndex + " out of " + actionList.size());
+					try {
+						actionList.get(i).doAction((level, message) -> addLogLater(level, message));
+					} catch (LoggedException e) {
+						// Stops the execution if is error level exception,
+						// otherwise stop & skip only the current action
+						if (Level.ERROR == e.getLogLevel()) {
+							throw e;
+						} else {
+							addLogLater(e.getLogLevel(), e.getMessage());
+						}
 					}
 				}
+			} catch (Exception e) {
+				addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+				throw new CompletionException(e);
 			}
-		} catch (Exception e) {
-			addLog(Level.ERROR, Arrays.toString(e.getStackTrace()));
-			throw e;
-		} finally {
-			addLog(Level.INFO, "Execution finished");
-			activateButtons();
-		}
+		}).whenComplete((i, t) -> threadJobCompleted("Execution finished"));
+
 	}
 
 }

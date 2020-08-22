@@ -101,14 +101,19 @@ public abstract class AbstractAction {
 
 	protected abstract ActionInput populateInputNext(final ActionInput input);
 
-	public void doAction(final BiConsumer<Level, String> logConsumer) {
+	public void doAction(final BiConsumer<Level, String> logConsumer) throws Exception {
 		if(null == webDriver) {
 			throw new LoggedException(Level.ERROR, "No web driver set");
 		}
 		doSubAction(logConsumer);
 	}
 	
-	protected abstract void doSubAction(final BiConsumer<Level, String> logConsumer);
+	protected abstract void doSubAction(final BiConsumer<Level, String> logConsumer) throws Exception;
 
+	protected void produceLog(final BiConsumer<Level, String> logConsumer, Level level, String logMessage) {
+		if(null != logConsumer) {
+			logConsumer.accept(level, logMessage);
+		}
+	}
 
 }
