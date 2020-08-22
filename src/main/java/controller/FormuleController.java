@@ -3,7 +3,6 @@ package controller;
 import java.io.File;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -19,7 +18,6 @@ import customExceptions.LoggedException;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
@@ -55,18 +53,24 @@ public class FormuleController {
 	private TextFlow logConsole;
 
 	@FXML
+	private ScrollPane logPane;
+
+	@FXML
 	private ScrollPane displayPane;
 
-	private VBox fieldZone;
+	@FXML
+	private VBox actionDisplayZone;
 
 	public Stage primaryStage;
 
 	private FormuleModel model = new FormuleModel();
 
 	public void initialize() {
-		fieldZone = new VBox();
-		fieldZone.setAlignment(Pos.TOP_CENTER);
-		displayPane.setContent(fieldZone);
+		// when ever the content of scroll pane are changed (added or removed)
+		// it will set the height value (>>1) to scroll pane vvalue (0-1) which means
+		// always set to 1 => scroll to bottom
+		displayPane.vvalueProperty().bind(actionDisplayZone.heightProperty());
+		logPane.vvalueProperty().bind(logConsole.heightProperty());
 	}
 
 	public final void activateButtons() {
@@ -87,12 +91,12 @@ public class FormuleController {
 
 	private void addNewInputField() {
 		ActionInput actionInput = new ActionInput();
-		fieldZone.getChildren().add(actionInput);
+		actionDisplayZone.getChildren().add(actionInput);
 	}
 
 	private void removeTheLastInputField() {
-		if (!fieldZone.getChildren().isEmpty()) {
-			fieldZone.getChildren().remove(fieldZone.getChildren().size() - 1);
+		if (!actionDisplayZone.getChildren().isEmpty()) {
+			actionDisplayZone.getChildren().remove(actionDisplayZone.getChildren().size() - 1);
 		}
 	}
 
@@ -120,7 +124,9 @@ public class FormuleController {
 					this.model = model;
 					Platform.runLater(() -> updateFromModel());
 				} catch (Exception e) {
-					addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+					addLogLater(Level.ERROR, e.getMessage());
+					// for IDE consol debug purpose xD
+					e.printStackTrace();
 					throw new CompletionException(e);
 				}
 			}).whenComplete((i, t) -> threadJobCompleted("Configuration file load succed"));
@@ -166,7 +172,9 @@ public class FormuleController {
 							final ObjectMapper mapper = getObjectMapper();
 							mapper.writeValue(file, model);
 						} catch (Exception e) {
-							addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+							addLogLater(Level.ERROR, e.getMessage());
+							// for IDE consol debug purpose xD
+							e.printStackTrace();
 							throw new CompletionException(e);
 						}
 					}).whenComplete((i, t) -> threadJobCompleted("Configuration file save succed"));
@@ -177,7 +185,7 @@ public class FormuleController {
 				taskCancelled("No action to save");
 			}
 		} catch (Exception e) {
-			addLog(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+			addLog(Level.ERROR, e.getMessage());
 			activateButtons();
 			throw e;
 		}
@@ -195,8 +203,8 @@ public class FormuleController {
 	}
 
 	private void updateFromModel() {
-		fieldZone.getChildren().clear();
-		fieldZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
+		actionDisplayZone.getChildren().clear();
+		actionDisplayZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
 	}
 
 	private void updateToModel() {
@@ -205,7 +213,7 @@ public class FormuleController {
 
 	private List<AbstractAction> getActionList(@Nullable final WebDriver webDriver) {
 		final List<AbstractAction> actionList = new ArrayList<>();
-		for (Node node : fieldZone.getChildrenUnmodifiable()) {
+		for (Node node : actionDisplayZone.getChildrenUnmodifiable()) {
 			if (node instanceof ActionInput) {
 				final ActionInput actionInput = (ActionInput) node;
 				try {
@@ -244,8 +252,6 @@ public class FormuleController {
 		CompletableFuture.runAsync(() -> {
 			try {
 				final WebDriver webDriver = WebDriverUtils.getNewWebDriver();
-				webDriver.get("https://www.google.com");
-				WebDriverUtils.getHttpCode(webDriver);
 				final List<AbstractAction> actionList = getActionList(webDriver);
 				addLogLater(Level.DEBUG, "There are total of " + actionList.size() + " actions to execute");
 				for (int i = 0; i < actionList.size(); i++) {
@@ -265,7 +271,9 @@ public class FormuleController {
 					}
 				}
 			} catch (Exception e) {
-				addLogLater(Level.ERROR, e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+				addLogLater(Level.ERROR, e.getMessage());
+				// for IDE consol debug purpose xD
+				e.printStackTrace();
 				throw new CompletionException(e);
 			}
 		}).whenComplete((i, t) -> threadJobCompleted("Execution finished"));

@@ -43,43 +43,36 @@ public class WebDriverUtils {
 	 * @param driver
 	 * @param url
 	 * @param wantHttpCode
-	 * @return -1 if dont want http code
+	 * @return httpcode of the action, -1 if dont want http code
 	 */
-	public static final int navigate(final WebDriver driver, final String url, final boolean wantHttpCode) {
+	public static final int navigate(final WebDriver driver, final String url) {
 		driver.navigate().to(url);
-		int httpCode = -1;
-		if (wantHttpCode) {
-			httpCode = getHttpCode(driver);
-		}
-		return httpCode;
+		return getHttpCode(driver);
 	}
 
 	/**
-	 * 
+	 * Click returns an http code because there are cases of hyperlink clicking
 	 * @param driver
 	 * @param target
 	 * @param wantHttpCode
-	 * @return -1 if dont want http code
+	 * @return httpcode of the action, -1 if dont want http code
 	 */
-	public static final int click(final WebDriver driver, final String target, final boolean wantHttpCode) {
-		// TODO find target, and click it
-		int httpCode = -1;
-		if (wantHttpCode) {
-			httpCode = getHttpCode(driver);
-		}
-		return httpCode;
+	public static final int click(final WebDriver driver, final String target) {
+		return getHttpCode(driver);
 	}
 
 	public static final void fill(final WebDriver driver, final String target, final String content) {
 		// TODO find target, and click it
 	}
 
+	/**
+	 * Get the http response code of the currently displayed page
+	 * @param driver
+	 * @return
+	 */
 	public static final int getHttpCode(final WebDriver driver) {
 		final String url = driver.getCurrentUrl();
-		if(urlToResponseCodeMap.containsKey(url)) {
-			return urlToResponseCodeMap.get(url);
-		}
-		return -2;
+		return urlToResponseCodeMap.getOrDefault(url, HTTP_CODE_URL_NOT_FOUND);
 	}
 
 	public static final void setWebDriverSystemProperty() {

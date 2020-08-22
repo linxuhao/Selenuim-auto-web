@@ -10,8 +10,8 @@ import controller.ActionInput;
 import customExceptions.LoggedException;
 import utils.WebDriverUtils;
 
-public class ActionWithNextCondition extends AbstractAction{
-	
+public class ActionWithNextCondition extends AbstractAction {
+
 	private NextConditionType nextConditionType;
 	private String nextCondition;
 	private boolean retryIfNotNext;
@@ -27,12 +27,10 @@ public class ActionWithNextCondition extends AbstractAction{
 		this.nextCondition = nextCondition;
 		this.retryIfNotNext = retryIfNotNext;
 	}
-	
 
 	public final NextConditionType getNextConditionType() {
 		return nextConditionType;
 	}
-
 
 	public final String getNextCondition() {
 		return nextCondition;
@@ -64,53 +62,67 @@ public class ActionWithNextCondition extends AbstractAction{
 	}
 
 	@Override
-	public String toString() {
-		return "ActionWithNextCondition [nextConditionType=" + nextConditionType + ", nextCondition=" + nextCondition
-				+ ", retryIfNotNext=" + retryIfNotNext + ", getExecutionTime()=" + getExecutionTime() + ", getTarget()="
-				+ getTarget() + ", getActionType()=" + getActionType() + "]";
+	public String subToString() {
+		return "nextConditionType=" + nextConditionType + ", nextCondition=" + nextCondition + ", retryIfNotNext="
+				+ retryIfNotNext;
 	}
-	
+
 	@Override
-	public void doSubAction(final BiConsumer<Level, String> logConsumer) throws Exception {
-		final boolean wantHttpCode = NextConditionType.HTTP_CODE == getNextConditionType();
+	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) throws Exception {
 		int httpCode = -1;
 		switch (getActionType()) {
 		case NAVIGATE:
 			produceLog(logConsumer, Level.DEBUG, "Navigating to " + getTarget());
-			httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget(), wantHttpCode);
-			retryOnCondition(logConsumer, httpCode);
+			httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget());
+			retryOnCondition(logConsumer, httpCode, retryTimes);
 			break;
 		case CLICK:
-			httpCode = WebDriverUtils.click(getWebDriver(), getTarget(), wantHttpCode);
+			produceLog(logConsumer, Level.DEBUG, "Clicking " + getTarget());
+			httpCode = WebDriverUtils.click(getWebDriver(), getTarget());
+			retryOnCondition(logConsumer, httpCode, retryTimes);
 			break;
 		default:
-			throw new LoggedException(Level.ERROR, "Unsupported action type: " + getActionType() + " for the class: " + getClass());
+			throw new LoggedException(Level.ERROR,
+					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
 	}
 
-	private void retryOnCondition(final BiConsumer<Level, String> logConsumer, int httpCode)
+	private void retryOnCondition(final BiConsumer<Level, String> logConsumer, final int httpCode, final int retryTimes)
 			throws InterruptedException, Exception {
-		boolean succed = evaluateNextCondition(httpCode);
-		boolean httpCodeNotFound = WebDriverUtils.HTTP_CODE_URL_NOT_FOUND == httpCode;
-		if(httpCodeNotFound) {
-			produceLog(logConsumer, Level.WARNING, "The http code of " + getWebDriver().getCurrentUrl() + " is not found");
-		}else {
-			if(retryIfNotNext && !succed) {
-				produceLog(logConsumer, Level.DEBUG, "The http code of " + getWebDriver().getCurrentUrl() + " is " + httpCode + "\nWhich is not " + nextCondition + ", retrying");
-				doSubAction(logConsumer);
+		final boolean succed = evaluateNextCondition(logConsumer, httpCode);
+		final boolean httpCodeNotFound = WebDriverUtils.HTTP_CODE_URL_NOT_FOUND == httpCode;
+		if (httpCodeNotFound) {
+			produceLog(logConsumer, Level.WARNING,
+					"The http code of " + getWebDriver().getCurrentUrl() + " is not found");
+		} else {
+			if(!succed) {
+				produceLog(logConsumer, Level.WARNING, "The http code of " + getWebDriver().getCurrentUrl() + " is : "
+						+ httpCode + "\nWhich is not the next condition : " + nextCondition);
+				if (retryIfNotNext && retryTimes > 0) {
+					final int retryTimeLeft = retryTimes - 1;
+					produceLog(logConsumer, Level.DEBUG, "Retrying, " + retryTimeLeft + " attemp left");
+					//Assume clicked on a hyper link and didnt get what i want
+					if(ActionType.CLICK == getActionType()) {
+						getWebDriver().navigate().back();
+					}
+					doSubAction(logConsumer, retryTimeLeft);
+				}else {
+					throw new LoggedException(Level.ERROR, "Action failed");
+				}
 			}
 		}
 	}
 
-	private boolean evaluateNextCondition(final int httpCode) throws NumberFormatException, InterruptedException {
+	private boolean evaluateNextCondition(final BiConsumer<Level, String> logConsumer,final int httpCode) throws NumberFormatException, InterruptedException {
 		boolean result = false;
 		switch (getNextConditionType()) {
 		case HTTP_CODE:
-			if(Integer.parseInt(nextCondition) == httpCode) {
+			if (Integer.parseInt(nextCondition) == httpCode) {
 				result = true;
 			}
 			break;
 		case DELAY_MILISECONDS:
+			produceLog(logConsumer, Level.DEBUG, "Delaying for " + nextCondition + " milliseconds before next action");
 			Thread.sleep(Integer.parseInt(nextCondition));
 		case NO_CONDITION:
 		default:
@@ -127,5 +139,5 @@ public class ActionWithNextCondition extends AbstractAction{
 		input.setRetryIfNotNext(retryIfNotNext);
 		return input;
 	}
-	
+
 }

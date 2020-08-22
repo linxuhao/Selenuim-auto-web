@@ -6,11 +6,12 @@ import java.util.function.BiConsumer;
 
 import constants.ActionType;
 import controller.ActionInput;
+import customExceptions.LoggedException;
 import utils.LogUtils;
 import utils.WebDriverUtils;
 
 public class ActionWithContent extends AbstractAction {
-	
+
 	private String content;
 
 	public ActionWithContent() {
@@ -47,23 +48,27 @@ public class ActionWithContent extends AbstractAction {
 	}
 
 	@Override
-	public String toString() {
-		return "ActionWithContent [content=" + content + ", getExecutionTime()=" + getExecutionTime() + ", getTarget()="
-				+ getTarget() + ", getActionType()=" + getActionType() + "]";
+	public String subToString() {
+		return "content=" + content;
 	}
-	
 
 	@Override
-	public void doSubAction(final BiConsumer<Level, String> logConsumer) {
+	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) {
 		if (content.isBlank()) {
 			final String reason = "No content to fill specified";
-			if(null != logConsumer) {
+			if (null != logConsumer) {
 				logConsumer.accept(Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
 			}
 		}
-		WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
+		switch (getActionType()) {
+		case FILL:
+			WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
+		default:
+			throw new LoggedException(Level.ERROR,
+					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
+		}
 	}
-	
+
 	@Override
 	protected ActionInput populateInputNext(final ActionInput input) {
 		input.setContent(content);

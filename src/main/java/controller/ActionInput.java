@@ -58,7 +58,7 @@ public class ActionInput extends VBox {
 			actionTypeSelect.getSelectionModel().selectFirst();
 			nextConditionTypeSelect.getItems().addAll(NextConditionType.values());
 			nextConditionTypeSelect.getSelectionModel().selectFirst();
-			refreshComponent();
+			refreshComponents();
 		} catch (IOException exception) {
 			throw new RuntimeException(exception);
 		}
@@ -92,20 +92,18 @@ public class ActionInput extends VBox {
 		this.retryIfNotNext.setSelected(retry);
 	}
 
-	public final void refreshComponent() {
+	public final void refreshComponents() {
 		onActionTypeChanged();
 		onNextConditionTypeChanged();
 	}
 
 	@FXML
 	void onActionTypeChange(ActionEvent event) {
-		System.out.println("changed to " + actionTypeSelect.getSelectionModel().getSelectedItem());
-		refreshComponent();
+		refreshComponents();
 	}
 
 	@FXML
 	void onNextConditionTypeChange(ActionEvent event) {
-		System.out.println("changed to " + nextConditionTypeSelect.getSelectionModel().getSelectedItem());
 		onNextConditionTypeChanged();
 	}
 
