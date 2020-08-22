@@ -18,8 +18,9 @@ public class ActionWithContent extends AbstractAction {
 		super();
 	}
 
-	public ActionWithContent(final String executionTime, final String target, final String content) {
-		super(executionTime, ActionType.FILL, target);
+	public ActionWithContent(final String executionTime, final ActionType actionType, final String target,
+			final String content) {
+		super(executionTime, actionType, target);
 		this.content = content;
 	}
 
@@ -54,19 +55,26 @@ public class ActionWithContent extends AbstractAction {
 
 	@Override
 	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) {
-		if (content.isBlank()) {
-			final String reason = "No content to fill specified";
-			if (null != logConsumer) {
-				logConsumer.accept(Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
-			}
-		}
+
 		switch (getActionType()) {
+		case SELECT:
+			produceLog(logConsumer, Level.DEBUG, "Selecting  " + getTarget() + "'s value to " + getContent());
+			WebDriverUtils.select(getWebDriver(), getTarget(), getContent());
+			break;
 		case FILL:
-			WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
+			if (content.isBlank()) {
+				final String reason = "No content to fill specified";
+				produceLog(logConsumer, Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
+			} else {
+				produceLog(logConsumer, Level.DEBUG, "Filling  " + getTarget() + "'s value to " + getContent());
+				WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
+			}
+			break;
 		default:
 			throw new LoggedException(Level.ERROR,
 					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
+
 	}
 
 	@Override

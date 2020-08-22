@@ -140,6 +140,7 @@ public class ActionInput extends VBox {
 			displayNextConditionBlock();
 			hideContent();
 			break;
+		case SELECT:
 		case FILL:
 			hideNextConditionBlock();
 			displayContent();
@@ -192,8 +193,9 @@ public class ActionInput extends VBox {
 			action = new ActionWithNextCondition(time.getText(), actionType, targetString, nextConditionType,
 					nextConditionString, retryIfNotNext.isSelected());
 			break;
+		case SELECT:
 		case FILL:
-			action = new ActionWithContent(time.getText(), targetString, content.getText());
+			action = new ActionWithContent(time.getText(), actionType, targetString, content.getText());
 			break;
 		default:
 			final String reason = "Unsupported actionType : " + actionType;
