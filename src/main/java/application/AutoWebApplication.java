@@ -32,11 +32,11 @@ public class AutoWebApplication extends Application {
 		final String formuleViewAdress = "/view/formule.fxml";
 
 		// load the root
-		FXMLLoader loader = new FXMLLoader();
+		final FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource(formuleViewAdress));
 
-		Parent root = loader.load();
-		FormuleController controller = loader.getController();
+		final Parent root = loader.load();
+		final FormuleController controller = loader.getController();
 		controller.primaryStage = primaryStage;
 		// add all elements
 

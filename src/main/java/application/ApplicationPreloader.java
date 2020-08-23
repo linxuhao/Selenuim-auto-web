@@ -26,13 +26,13 @@ public class ApplicationPreloader extends Preloader {
 		primaryStage.initStyle(StageStyle.TRANSPARENT);
 
 		// load the root
-		FXMLLoader loader = new FXMLLoader();
+		final FXMLLoader loader = new FXMLLoader();
 		loader.setController(this);
 		loader.setLocation(getClass().getResource(viewAdress));
-		Parent root = loader.load();
+		final Parent root = loader.load();
 		splashView.setImage(new Image(getClass().getResourceAsStream("/Bean-Eater-1s-200px.gif")));
 		// add all elements
-		Scene scene = new Scene(root);
+		final Scene scene = new Scene(root);
 		scene.setFill(Color.TRANSPARENT);
 		primaryStage.centerOnScreen();
 		primaryStage.setScene(scene);

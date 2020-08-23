@@ -48,7 +48,7 @@ public class ActionInput extends VBox {
 	private CheckBox retryIfNotNext;
 
 	public ActionInput() {
-		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/action.fxml"));
+		final FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/action.fxml"));
 		fxmlLoader.setRoot(this);
 		fxmlLoader.setController(this);
 
@@ -101,7 +101,7 @@ public class ActionInput extends VBox {
 		AbstractAction action = null;
 		final ActionType actionType = this.actionTypeSelect.getSelectionModel().getSelectedItem();
 		final NextConditionType nextConditionType = this.nextConditionTypeSelect.getSelectionModel().getSelectedItem();
-		String targetString = target.getText();
+		final String targetString = target.getText();
 		if (targetString.isBlank()) {
 			final String reason = "No target locator Specified";
 			throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
@@ -109,7 +109,7 @@ public class ActionInput extends VBox {
 		switch (actionType) {
 		case CLICK:
 		case NAVIGATE:
-			String nextConditionString = nextCondition.getText();
+			final String nextConditionString = nextCondition.getText();
 			if (NextConditionType.NO_CONDITION != nextConditionType && nextConditionString.isBlank()) {
 				final String reason = "No Next Condition specified (Http code or delay in millisecond)";
 				throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
@@ -137,7 +137,7 @@ public class ActionInput extends VBox {
 				+ "]";
 	}
 
-	private void changeComponenetsVisibility(boolean visibility, Control... components) {
+	private void changeComponenetsVisibility(boolean visibility, final Control... components) {
 		for (Control component : components) {
 			component.setVisible(visibility);
 		}

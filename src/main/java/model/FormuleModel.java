@@ -7,7 +7,7 @@ import actions.AbstractAction;
 
 public class FormuleModel {
 	
-	private List<AbstractAction> actionList;
+	private final List<AbstractAction> actionList;
 	
 	public FormuleModel() {
 		super();
@@ -24,7 +24,8 @@ public class FormuleModel {
 	}
 
 	public void setActionList(List<AbstractAction> actionList) {
-		this.actionList = actionList;
+		this.actionList.clear();
+		this.actionList.addAll(actionList);
 	}
 
 }

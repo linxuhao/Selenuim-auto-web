@@ -2,6 +2,7 @@ package controller;
 
 import java.io.File;
 import java.lang.System.Logger.Level;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -75,11 +76,11 @@ public class FormuleController {
 		startButton.setDisable(false);
 	}
 	
-	public final void addLog(Level level, String message) {
+	public final void addLog(final Level level, final String message) {
 		LogUtils.addLog(logConsole, level, message);
 	}
 
-	public final void addLogLater(Level level, String message) {
+	public final void addLogLater(final Level level, final String message) {
 		Platform.runLater(() -> addLog(level, message));
 	}
 
@@ -100,7 +101,7 @@ public class FormuleController {
 	}
 
 	private void addNewInputField() {
-		ActionInput actionInput = new ActionInput();
+		final ActionInput actionInput = new ActionInput();
 		actionDisplayZone.getChildren().add(actionInput);
 	}
 
@@ -126,8 +127,10 @@ public class FormuleController {
 		return actionList;
 	}
 
-	private FileChooser getFileChooser(String fileChooserName) {
-		FileChooser fileChooser = new FileChooser();
+	private FileChooser getFileChooser(final String fileChooserName) {
+		final FileChooser fileChooser = new FileChooser();
+		final String currentPath = Paths.get(".").toAbsolutePath().normalize().toString();
+		fileChooser.setInitialDirectory(new File(currentPath));
 		fileChooser.setTitle(fileChooserName);
 		return fileChooser;
 	}
@@ -140,7 +143,7 @@ public class FormuleController {
 	}
 
 	private List<ActionInput> loadFromObjectList(final List<AbstractAction> actionList) {
-		List<ActionInput> actionInputList = new ArrayList<>();
+		final List<ActionInput> actionInputList = new ArrayList<>();
 		for (AbstractAction action : actionList) {
 			actionInputList.add(action.toActionInput());
 		}
@@ -185,14 +188,14 @@ public class FormuleController {
 	@FXML
 	void loadFromFile(ActionEvent event) throws Exception {
 		disactiveButtons();
-		FileChooser fileChooser = getFileChooser("Load Configuration file");
-		File file = fileChooser.showOpenDialog(primaryStage);
+		final FileChooser fileChooser = getFileChooser("Load Configuration file");
+		final File file = fileChooser.showOpenDialog(primaryStage);
 		if (null != file) {
 			CompletableFuture.runAsync(() -> {
 				// Read file in another thread for UI responsiveness
 				try {
 					final ObjectMapper mapper = getObjectMapper();
-					FormuleModel model = mapper.readValue(file, FormuleModel.class);
+					final FormuleModel model = mapper.readValue(file, FormuleModel.class);
 					this.model = model;
 					Platform.runLater(() -> updateFromModel());
 				} catch (Exception e) {
@@ -219,8 +222,8 @@ public class FormuleController {
 			// Not saving web driver to json, so no need to set it in actions
 			final List<AbstractAction> actionList = getActionList(null);
 			if (!actionList.isEmpty()) {
-				FileChooser fileChooser = getFileChooser("Save Configuration file");
-				File file = fileChooser.showSaveDialog(primaryStage);
+				final FileChooser fileChooser = getFileChooser("Save Configuration file");
+				final File file = fileChooser.showSaveDialog(primaryStage);
 				updateToModel();
 				if (null != file) {
 					addLog(Level.DEBUG, "Saving configuration to file : " + file.getAbsolutePath());

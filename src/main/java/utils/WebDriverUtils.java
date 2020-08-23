@@ -55,7 +55,7 @@ public class WebDriverUtils {
 		}
 		return proxy;
 	}
-	
+
 	public static final WebDriver getNewWebDriver() {
 		final Proxy seleniumProxy = ClientUtil.createSeleniumProxy(getBrowserMobProxy());
 		final ChromeOptions options = new ChromeOptions();
@@ -92,7 +92,7 @@ public class WebDriverUtils {
 			throw new LoggedException(Level.ERROR, "Fill, Couldnt find the target " + target);
 		}
 	}
-	
+
 	/**
 	 * Get the http response code of the currently displayed page
 	 * 
@@ -103,7 +103,7 @@ public class WebDriverUtils {
 		final String url = driver.getCurrentUrl();
 		return urlToResponseCodeMap.getOrDefault(url, HTTP_CODE_URL_NOT_FOUND);
 	}
-	
+
 	/**
 	 * 
 	 * @param driver
@@ -120,7 +120,7 @@ public class WebDriverUtils {
 		final WebElement element = findByXPathQuerySupplier(driver,
 				() -> createSimpleElementFindXPathQueryList(TAG_SELECT, target));
 		if (null != element) {
-			Select selectElement = new Select(element);
+			final Select selectElement = new Select(element);
 			selectElement.selectByVisibleText(content);
 		} else {
 			throw new LoggedException(Level.ERROR, "Select, Couldnt find the target " + target);
@@ -149,21 +149,21 @@ public class WebDriverUtils {
 		final List<String> queryList = new ArrayList<>();
 		queryList.add(createSimpleXPathQuery(TAG_BUTTON, ATTRIBUTE_ID, target));
 		queryList.add(createSimpleXPathQuery(TAG_BUTTON, ATTRIBUTE_NAME, target));
-		
+
 		queryList.add(createSimpleXPathQuery(TAG_LINK, ATTRIBUTE_ID, target));
 		queryList.add(createSimpleXPathQuery(TAG_LINK, ATTRIBUTE_NAME, target));
-		
+
 		queryList.add(createSimpleXPathQuery(TAG_INPUT, ATTRIBUTE_ID, target));
 		queryList.add(createSimpleXPathQuery(TAG_INPUT, ATTRIBUTE_NAME, target));
-		
+
 		queryList.add(createTextXPathQuery(TAG_BUTTON, target));
 		queryList.add(createTextXPathQuery(TAG_LINK, target));
 		queryList.add(createTextXPathQuery(TAG_INPUT, target));
-		
+
 		queryList.add(createSimpleXPathQuery(TAG_BUTTON, ATTRIBUTE_VALUE, target));
 		queryList.add(createSimpleXPathQuery(TAG_LINK, ATTRIBUTE_VALUE, target));
 		queryList.add(createSimpleXPathQuery(TAG_INPUT, ATTRIBUTE_VALUE, target));
-		
+
 		queryList.add(createSimpleXPathQuery(TAG_BUTTON, ATTRIBUTE_CLASSNAME, target));
 		queryList.add(createSimpleXPathQuery(TAG_LINK, ATTRIBUTE_CLASSNAME, target));
 		queryList.add(createSimpleXPathQuery(TAG_INPUT, ATTRIBUTE_CLASSNAME, target));
@@ -199,8 +199,7 @@ public class WebDriverUtils {
 	 */
 	private static String createSimpleXPathQuery(final String tagname, final String attributeName,
 			final String target) {
-		return String.format(StringEscapeUtils.escapeJava("//%s[contains(@%s,'%s')]"), tagname, attributeName,
-				target);
+		return String.format(StringEscapeUtils.escapeJava("//%s[contains(@%s,'%s')]"), tagname, attributeName, target);
 	}
 
 	/**
@@ -227,7 +226,7 @@ public class WebDriverUtils {
 		for (String xPathQuery : xPathQueryList) {
 			final List<WebElement> elements = driver.findElements(By.xpath(xPathQuery));
 			if (!elements.isEmpty()) {
-				//get the first
+				// get the first
 				return elements.get(0);
 			}
 		}

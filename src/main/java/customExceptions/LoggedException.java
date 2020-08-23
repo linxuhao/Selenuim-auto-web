@@ -11,12 +11,12 @@ public class LoggedException extends RuntimeException{
 	
 	private final Level logLevel;
 	
-	public LoggedException(Level logLevel, String logMessage) {
+	public LoggedException(final Level logLevel, final String logMessage) {
 		super(logMessage);
 		this.logLevel = logLevel;
 	}
 	
-	public LoggedException(Level logLevel, String logMessage, Throwable cause) {
+	public LoggedException(final Level logLevel, final String logMessage, final Throwable cause) {
 		super(logMessage, cause);
 		this.logLevel = logLevel;
 	}

@@ -8,8 +8,6 @@ import java.time.format.DateTimeParseException;
 
 public class DateTimeUtils {
 
-	public static final String TIME_DELIMITER = ":";
-
 	public static final LocalTime toLocalTime(final String time) throws DateTimeParseException {
 		return LocalTime.parse(time);
 	}

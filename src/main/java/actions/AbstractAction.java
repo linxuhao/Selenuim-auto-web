@@ -162,7 +162,7 @@ public abstract class AbstractAction {
 
 	protected abstract ActionInput populateInputNext(final ActionInput input);
 
-	protected void produceLog(final BiConsumer<Level, String> logConsumer, Level level, String logMessage) {
+	protected void produceLog(final BiConsumer<Level, String> logConsumer, final Level level, final String logMessage) {
 		if (null != logConsumer) {
 			logConsumer.accept(level, logMessage);
 		}
