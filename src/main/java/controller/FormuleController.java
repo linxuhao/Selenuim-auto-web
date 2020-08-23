@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +23,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Pagination;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
@@ -64,6 +66,9 @@ public class FormuleController {
 	@FXML
 	private VBox actionDisplayZone;
 
+	@FXML
+	private Pagination launcnNumberPicker;
+
 	public Stage primaryStage;
 
 	private FormuleModel model = new FormuleModel();
@@ -74,14 +79,26 @@ public class FormuleController {
 		loadButton.setDisable(false);
 		saveButton.setDisable(false);
 		startButton.setDisable(false);
+		launcnNumberPicker.setDisable(false);
 	}
-	
+
 	public final void addLog(final Level level, final String message) {
 		LogUtils.addLog(logConsole, level, message);
 	}
 
+	public final void addLogLater(@Nullable final Integer currentLaunchIndex, final Level level, final String message) {
+		String launchIndexMessage;
+		if(null == currentLaunchIndex) {
+			launchIndexMessage = "";
+		}else {
+			launchIndexMessage = "[" + currentLaunchIndex + "] ";
+		}
+		final String launchIndexedMessage = launchIndexMessage + message;
+		Platform.runLater(() -> addLog(level, launchIndexedMessage));
+	}
+	
 	public final void addLogLater(final Level level, final String message) {
-		Platform.runLater(() -> addLog(level, message));
+		addLogLater(null, level, message);
 	}
 
 	public final void disactiveButtons() {
@@ -90,6 +107,7 @@ public class FormuleController {
 		loadButton.setDisable(true);
 		saveButton.setDisable(true);
 		startButton.setDisable(true);
+		launcnNumberPicker.setDisable(true);
 	}
 
 	public void initialize() {
@@ -137,8 +155,9 @@ public class FormuleController {
 
 	private ObjectMapper getObjectMapper() {
 		final ObjectMapper mapper = new ObjectMapper();
-		final SimpleModule usageModule = new SimpleModule().addDeserializer(FormuleModel.class, new FormuleModelDeserializer());
-	    mapper.registerModule(usageModule);
+		final SimpleModule usageModule = new SimpleModule().addDeserializer(FormuleModel.class,
+				new FormuleModelDeserializer());
+		mapper.registerModule(usageModule);
 		return mapper;
 	}
 
@@ -161,8 +180,8 @@ public class FormuleController {
 		activateButtons();
 	}
 
-	private void threadJobCompleted(String completionMessage) {
-		addLogLater(Level.DEBUG, completionMessage);
+	private void threadJobCompleted(final Integer currentLaunchIndex, final String completionMessage) {
+		addLogLater(currentLaunchIndex, Level.DEBUG, completionMessage);
 		Platform.runLater(() -> activateButtons());
 	}
 
@@ -170,7 +189,7 @@ public class FormuleController {
 		actionDisplayZone.getChildren().clear();
 		actionDisplayZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
 	}
-	
+
 	private void updateToModel() {
 		this.model.setActionList(getActionList(null));
 	}
@@ -204,7 +223,7 @@ public class FormuleController {
 					e.printStackTrace();
 					throw new CompletionException(e);
 				}
-			}).whenComplete((i, t) -> threadJobCompleted("Configuration file load finished"));
+			}).whenComplete((i, t) -> threadJobCompleted(null, "Configuration file load finished"));
 		} else {
 			taskCancelled("No file to load selected");
 		}
@@ -239,7 +258,7 @@ public class FormuleController {
 							e.printStackTrace();
 							throw new CompletionException(e);
 						}
-					}).whenComplete((i, t) -> threadJobCompleted("Configuration file save finished"));
+					}).whenComplete((i, t) -> threadJobCompleted(null, "Configuration file save finished"));
 				} else {
 					taskCancelled("No file to save selected");
 				}
@@ -256,35 +275,36 @@ public class FormuleController {
 	@FXML
 	void startTask(ActionEvent event) throws Exception {
 		disactiveButtons();
-		CompletableFuture.runAsync(() -> {
-			try {
-				final WebDriver webDriver = WebDriverUtils.getNewWebDriver();
-				final List<AbstractAction> actionList = getActionList(webDriver);
-				addLogLater(Level.DEBUG, "There are total of " + actionList.size() + " actions to execute");
-				for (int i = 0; i < actionList.size(); i++) {
-					final int humainReadableActionIndex = i + 1;
-					addLogLater(Level.DEBUG,
-							"Executing action " + humainReadableActionIndex + " out of " + actionList.size());
-					try {
-						actionList.get(i).doAction((level, message) -> addLogLater(level, message));
-					} catch (LoggedException e) {
-						// Stops the execution if is error level exception,
-						// otherwise stop & skip only the current action
-						if (Level.ERROR == e.getLogLevel()) {
-							throw e;
-						} else {
-							addLogLater(e.getLogLevel(), e.getMessage());
+		final int launcnNumber = this.launcnNumberPicker.getCurrentPageIndex() + 1;
+		IntStream.range(1, launcnNumber + 1).parallel().forEach((currentLaunchIndex) -> {
+			CompletableFuture.runAsync(() -> {
+				try {
+					final WebDriver webDriver = WebDriverUtils.getNewWebDriver();
+					final List<AbstractAction> actionList = getActionList(webDriver);
+					addLogLater(currentLaunchIndex, Level.DEBUG, "There are total of " + actionList.size() + " actions to execute");
+					for (int i = 0; i < actionList.size(); i++) {
+						final int humainReadableActionIndex = i + 1;
+						addLogLater(currentLaunchIndex, Level.DEBUG,
+								"Executing action " + humainReadableActionIndex + " out of " + actionList.size());
+						try {
+							actionList.get(i).doAction((level, message) -> addLogLater(currentLaunchIndex, level, message));
+						} catch (LoggedException e) {
+							// Stops the execution if is error level exception,
+							// otherwise stop & skip only the current action
+							if (Level.ERROR == e.getLogLevel()) {
+								throw e;
+							} else {
+								addLogLater(currentLaunchIndex, e.getLogLevel(), e.getMessage());
+							}
 						}
 					}
+				} catch (Exception e) {
+					addLogLater(currentLaunchIndex, Level.ERROR, e.getMessage());
+					// for IDE consol debug purpose xD
+					e.printStackTrace();
+					throw new CompletionException(e);
 				}
-			} catch (Exception e) {
-				addLogLater(Level.ERROR, e.getMessage());
-				// for IDE consol debug purpose xD
-				e.printStackTrace();
-				throw new CompletionException(e);
-			}
-		}).whenComplete((i, t) -> threadJobCompleted("Execution finished"));
-
+			}).whenComplete((i, t) -> threadJobCompleted(currentLaunchIndex, "Execution finished"));
+		});
 	}
-
 }

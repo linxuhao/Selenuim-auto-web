@@ -51,6 +51,7 @@ There are ``3 types of conditions before executing next action`` for (**navigate
 - **Load** : load a previously saved action list from file
 - **Save** : save current action list into file
 - **Start** : starts to run the actions in the action list on a new navigator
+- **Multi launch picker** : launch the same task n times
 - **Clear log** : clears the log
 
 ### output console

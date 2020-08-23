@@ -59,6 +59,19 @@
                                           <Insets left="50.0" top="10.0" />
                                        </HBox.margin>
                                     </Button>
+                                    <Label text="Multi Launch">
+                                       <HBox.margin>
+                                          <Insets left="30.0" top="15.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <Pagination fx:id="launcnNumberPicker" pageCount="20" prefHeight="33.0" prefWidth="362.0">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                       <padding>
+                                          <Insets top="30.0" />
+                                       </padding>
+                                    </Pagination>
       											</children>
       										</HBox>
       										<VBox prefHeight="355.0" prefWidth="134.0">
