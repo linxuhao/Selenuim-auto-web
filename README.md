@@ -13,7 +13,7 @@ Loading screen with preloader from [this tutorial](https://blog.codecentric.de/e
 
 ## How to use
 
-[Download](https://github.com/linxuhao/Selenuim-auto-web/releases/latest/download/autoweb.jar)Latest Release
+[Download](https://github.com/linxuhao/Selenuim-auto-web/releases/latest/download/autoweb.jar) ``Latest Release``
 
 The first start up of the app may takes a little while because
 
