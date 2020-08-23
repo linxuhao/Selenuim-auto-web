@@ -13,6 +13,8 @@ Loading screen with preloader from [this tutorial](https://blog.codecentric.de/e
 
 ## How to use
 
+[Latest Release](https://github.com/linxuhao/Selenuim-auto-web/releases/latest)
+
 The first start up of the app may takes a little while because
 
 The ``GUI has 3 parts`` : **Action List** at the top left, **output console** at the top right and **button zone** at the bottom
