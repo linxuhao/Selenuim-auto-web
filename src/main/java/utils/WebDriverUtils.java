@@ -126,6 +126,11 @@ public class WebDriverUtils {
 			throw new LoggedException(Level.ERROR, "Select, Couldnt find the target " + target);
 		}
 	}
+	
+	public static final int refresh(final WebDriver driver) {
+		driver.navigate().refresh();;
+		return getHttpCode(driver);
+	}
 
 	/**
 	 * <b>Priority : </b><br>

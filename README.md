@@ -40,6 +40,9 @@ There are ``3 types of conditions before executing next action`` for (**navigate
 - **Delay** : delay for given milliseconds before executing next action
 - **Non condition** : execute next action whenever this action finishes (**Fill and Select** are naturally bind with this option)
 
+``Retry``
+- **Navigate** : Re-attemp to do the navigate action
+- **Click** : Refresh the current page (Since the retry condition is only http code, it means only hyper link button is affected)
 
 ### Button zone
 

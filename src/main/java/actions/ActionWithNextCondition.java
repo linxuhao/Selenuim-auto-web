@@ -31,21 +31,30 @@ public class ActionWithNextCondition extends AbstractAction {
 	@Override
 	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) throws Exception {
 		int httpCode = -1;
-		switch (getActionType()) {
-		case NAVIGATE:
-			produceLog(logConsumer, Level.DEBUG, "Navigating to " + getTarget());
-			httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget());
+		if (retryTimes < RETRY_TIMES) {
+			//retry case
+			produceLog(logConsumer, Level.DEBUG, "Refreshing current page " + getTarget());
+			httpCode = WebDriverUtils.refresh(getWebDriver());
 			retryOnCondition(logConsumer, httpCode, retryTimes);
-			break;
-		case CLICK:
-			produceLog(logConsumer, Level.DEBUG, "Clicking " + getTarget());
-			httpCode = WebDriverUtils.click(getWebDriver(), getTarget());
-			retryOnCondition(logConsumer, httpCode, retryTimes);
-			break;
-		default:
-			throw new LoggedException(Level.ERROR,
-					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
+		} else {
+			//No retry case
+			switch (getActionType()) {
+			case NAVIGATE:
+				produceLog(logConsumer, Level.DEBUG, "Navigating to " + getTarget());
+				httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget());
+				retryOnCondition(logConsumer, httpCode, retryTimes);
+				break;
+			case CLICK:
+				produceLog(logConsumer, Level.DEBUG, "Clicking " + getTarget());
+				httpCode = WebDriverUtils.click(getWebDriver(), getTarget());
+				retryOnCondition(logConsumer, httpCode, retryTimes);
+				break;
+			default:
+				throw new LoggedException(Level.ERROR,
+						"Unsupported action type: " + getActionType() + " for the class: " + getClass());
+			}
 		}
+
 	}
 
 	@Override
@@ -87,7 +96,8 @@ public class ActionWithNextCondition extends AbstractAction {
 				+ retryIfNotNext;
 	}
 
-	private boolean evaluateNextCondition(final BiConsumer<Level, String> logConsumer,final int httpCode) throws NumberFormatException, InterruptedException {
+	private boolean evaluateNextCondition(final BiConsumer<Level, String> logConsumer, final int httpCode)
+			throws NumberFormatException, InterruptedException {
 		boolean result = false;
 		switch (getNextConditionType()) {
 		case HTTP_CODE:
@@ -114,18 +124,14 @@ public class ActionWithNextCondition extends AbstractAction {
 			produceLog(logConsumer, Level.WARNING,
 					"The http code of " + getWebDriver().getCurrentUrl() + " is not found");
 		} else {
-			if(!succed) {
+			if (!succed) {
 				produceLog(logConsumer, Level.WARNING, "The http code of " + getWebDriver().getCurrentUrl() + " is : "
 						+ httpCode + "\nWhich is not the next condition : " + nextCondition);
 				if (retryIfNotNext && retryTimes > 0) {
 					final int retryTimeLeft = retryTimes - 1;
 					produceLog(logConsumer, Level.DEBUG, "Retrying, " + retryTimeLeft + " attemp left");
-					//Assume clicked on a hyper link and didnt get what i want
-					if(ActionType.CLICK == getActionType()) {
-						getWebDriver().navigate().back();
-					}
 					doSubAction(logConsumer, retryTimeLeft);
-				}else {
+				} else {
 					throw new LoggedException(Level.ERROR, "Action failed");
 				}
 			}
