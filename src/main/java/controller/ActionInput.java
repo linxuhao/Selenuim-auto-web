@@ -64,113 +64,37 @@ public class ActionInput extends VBox {
 		}
 	}
 
+	public final void refreshComponents() {
+		onActionTypeChanged();
+		onNextConditionTypeChanged();
+	}
+
 	public final void setActionType(ActionType actionType) {
 		this.actionTypeSelect.getSelectionModel().select(actionType);
-	}
-
-	public final void setExecutionTime(String executionTime) {
-		this.time.setText(executionTime);
-	}
-
-	public final void setTarget(String target) {
-		this.target.setText(target);
 	}
 
 	public final void setContent(String content) {
 		this.content.setText(content);
 	}
 
-	public final void setNextConditionType(NextConditionType nextConditionType) {
-		this.nextConditionTypeSelect.getSelectionModel().select(nextConditionType);
+	public final void setExecutionTime(String executionTime) {
+		this.time.setText(executionTime);
 	}
 
 	public final void setNextCondition(String nextCondition) {
 		this.nextCondition.setText(nextCondition);
 	}
 
+	public final void setNextConditionType(NextConditionType nextConditionType) {
+		this.nextConditionTypeSelect.getSelectionModel().select(nextConditionType);
+	}
+
 	public final void setRetryIfNotNext(boolean retry) {
 		this.retryIfNotNext.setSelected(retry);
 	}
 
-	public final void refreshComponents() {
-		onActionTypeChanged();
-		onNextConditionTypeChanged();
-	}
-
-	@FXML
-	void onActionTypeChange(ActionEvent event) {
-		refreshComponents();
-	}
-
-	@FXML
-	void onNextConditionTypeChange(ActionEvent event) {
-		onNextConditionTypeChanged();
-	}
-
-	private void onNextConditionTypeChanged() {
-		if (nextConditionTypeSelect.isVisible()) {
-			switch (nextConditionTypeSelect.getSelectionModel().getSelectedItem()) {
-			case HTTP_CODE:
-			case DELAY_MILISECONDS:
-				displayNextConditionContent();
-				break;
-			case NO_CONDITION:
-				hideNextConditionContent();
-			default:
-				break;
-
-			}
-		} else {
-			hideNextConditionContent();
-		}
-	}
-
-	private void hideNextConditionContent() {
-		changeComponenetsVisibility(false, nextConditionLabel, nextCondition, retryIfNotNext);
-	}
-
-	private void displayNextConditionContent() {
-		changeComponenetsVisibility(true, nextConditionLabel, nextCondition, retryIfNotNext);
-	}
-
-	private void onActionTypeChanged() {
-		switch (actionTypeSelect.getSelectionModel().getSelectedItem()) {
-		case NAVIGATE:
-		case CLICK:
-			displayNextConditionBlock();
-			hideContent();
-			break;
-		case SELECT:
-		case FILL:
-			hideNextConditionBlock();
-			displayContent();
-			break;
-		default:
-			break;
-
-		}
-	}
-
-	private void displayContent() {
-		changeComponenetsVisibility(true, contentLabel, content);
-	}
-
-	private void hideContent() {
-		changeComponenetsVisibility(false, contentLabel, content);
-	}
-
-	private void hideNextConditionBlock() {
-		changeComponenetsVisibility(false, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
-	}
-
-	private void displayNextConditionBlock() {
-		changeComponenetsVisibility(true, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
-	}
-
-	private void changeComponenetsVisibility(boolean visibility, Control... components) {
-		for (Control component : components) {
-			component.setVisible(visibility);
-		}
+	public final void setTarget(String target) {
+		this.target.setText(target);
 	}
 
 	public final AbstractAction toAction() {
@@ -204,11 +128,6 @@ public class ActionInput extends VBox {
 		return action;
 	}
 
-	private LoggedException createLoggedException(final Level level, final String messageTemplate,
-			final String reason) {
-		return new LoggedException(level, String.format(messageTemplate, reason, toString()));
-	}
-
 	@Override
 	public String toString() {
 		return "ActionInput [actionTypeSelect=" + actionTypeSelect.getSelectionModel().getSelectedItem() + ", time="
@@ -216,6 +135,87 @@ public class ActionInput extends VBox {
 				+ ", nextConditionTypeSelect=" + nextConditionTypeSelect.getSelectionModel().getSelectedItem()
 				+ ", nextCondition=" + nextCondition.getText() + ", retryIfNotNext=" + retryIfNotNext.isSelected()
 				+ "]";
+	}
+
+	private void changeComponenetsVisibility(boolean visibility, Control... components) {
+		for (Control component : components) {
+			component.setVisible(visibility);
+		}
+	}
+
+	private LoggedException createLoggedException(final Level level, final String messageTemplate,
+			final String reason) {
+		return new LoggedException(level, String.format(messageTemplate, reason, toString()));
+	}
+
+	private void displayContent() {
+		changeComponenetsVisibility(true, contentLabel, content);
+	}
+
+	private void displayNextConditionBlock() {
+		changeComponenetsVisibility(true, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void displayNextConditionContent() {
+		changeComponenetsVisibility(true, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void hideContent() {
+		changeComponenetsVisibility(false, contentLabel, content);
+	}
+
+	private void hideNextConditionBlock() {
+		changeComponenetsVisibility(false, nextConditionTypeSelectLabel, nextConditionTypeSelect, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void hideNextConditionContent() {
+		changeComponenetsVisibility(false, nextConditionLabel, nextCondition, retryIfNotNext);
+	}
+
+	private void onActionTypeChanged() {
+		switch (actionTypeSelect.getSelectionModel().getSelectedItem()) {
+		case NAVIGATE:
+		case CLICK:
+			displayNextConditionBlock();
+			hideContent();
+			break;
+		case SELECT:
+		case FILL:
+			hideNextConditionBlock();
+			displayContent();
+			break;
+		default:
+			break;
+
+		}
+	}
+
+	private void onNextConditionTypeChanged() {
+		if (nextConditionTypeSelect.isVisible()) {
+			switch (nextConditionTypeSelect.getSelectionModel().getSelectedItem()) {
+			case HTTP_CODE:
+			case DELAY_MILISECONDS:
+				displayNextConditionContent();
+				break;
+			case NO_CONDITION:
+				hideNextConditionContent();
+			default:
+				break;
+
+			}
+		} else {
+			hideNextConditionContent();
+		}
+	}
+
+	@FXML
+	void onActionTypeChange(ActionEvent event) {
+		refreshComponents();
+	}
+
+	@FXML
+	void onNextConditionTypeChange(ActionEvent event) {
+		onNextConditionTypeChanged();
 	}
 
 }

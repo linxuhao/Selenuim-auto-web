@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import org.openqa.selenium.WebDriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import actions.AbstractAction;
 import customExceptions.LoggedException;
@@ -26,6 +27,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.FormuleModel;
+import model.FormuleModelDeserializer;
 import utils.LogUtils;
 import utils.WebDriverUtils;
 
@@ -65,20 +67,20 @@ public class FormuleController {
 
 	private FormuleModel model = new FormuleModel();
 
-	public void initialize() {
-		// when ever the content of scroll pane are changed (added or removed)
-		// it will set the height value (>>1) to scroll pane vvalue (0-1) which means
-		// always set to 1 => scroll to bottom
-		displayPane.vvalueProperty().bind(actionDisplayZone.heightProperty());
-		logPane.vvalueProperty().bind(logConsole.heightProperty());
-	}
-
 	public final void activateButtons() {
 		addButton.setDisable(false);
 		removeButton.setDisable(false);
 		loadButton.setDisable(false);
 		saveButton.setDisable(false);
 		startButton.setDisable(false);
+	}
+	
+	public final void addLog(Level level, String message) {
+		LogUtils.addLog(logConsole, level, message);
+	}
+
+	public final void addLogLater(Level level, String message) {
+		Platform.runLater(() -> addLog(level, message));
 	}
 
 	public final void disactiveButtons() {
@@ -89,9 +91,60 @@ public class FormuleController {
 		startButton.setDisable(true);
 	}
 
+	public void initialize() {
+		// when ever the content of scroll pane are changed (added or removed)
+		// it will set the height value (>>1) to scroll pane vvalue (0-1) which means
+		// always set to 1 => scroll to bottom
+		displayPane.vvalueProperty().bind(actionDisplayZone.heightProperty());
+		logPane.vvalueProperty().bind(logConsole.heightProperty());
+	}
+
 	private void addNewInputField() {
 		ActionInput actionInput = new ActionInput();
 		actionDisplayZone.getChildren().add(actionInput);
+	}
+
+	private List<AbstractAction> getActionList(@Nullable final WebDriver webDriver) {
+		final List<AbstractAction> actionList = new ArrayList<>();
+		for (Node node : actionDisplayZone.getChildrenUnmodifiable()) {
+			if (node instanceof ActionInput) {
+				final ActionInput actionInput = (ActionInput) node;
+				try {
+					final AbstractAction action = actionInput.toAction();
+					if (null != webDriver) {
+						action.setWebDriver(webDriver);
+					}
+					actionList.add(action);
+				} catch (LoggedException e) {
+					addLogLater(e.getLogLevel(), e.getMessage());
+					if (Level.ERROR == e.getLogLevel()) {
+						throw e;
+					}
+				}
+			}
+		}
+		return actionList;
+	}
+
+	private FileChooser getFileChooser(String fileChooserName) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(fileChooserName);
+		return fileChooser;
+	}
+
+	private ObjectMapper getObjectMapper() {
+		final ObjectMapper mapper = new ObjectMapper();
+		final SimpleModule usageModule = new SimpleModule().addDeserializer(FormuleModel.class, new FormuleModelDeserializer());
+	    mapper.registerModule(usageModule);
+		return mapper;
+	}
+
+	private List<ActionInput> loadFromObjectList(final List<AbstractAction> actionList) {
+		List<ActionInput> actionInputList = new ArrayList<>();
+		for (AbstractAction action : actionList) {
+			actionInputList.add(action.toActionInput());
+		}
+		return actionInputList;
 	}
 
 	private void removeTheLastInputField() {
@@ -100,14 +153,33 @@ public class FormuleController {
 		}
 	}
 
+	private void taskCancelled(String cancelMessage) {
+		addLog(Level.DEBUG, cancelMessage);
+		activateButtons();
+	}
+
+	private void threadJobCompleted(String completionMessage) {
+		addLogLater(Level.DEBUG, completionMessage);
+		Platform.runLater(() -> activateButtons());
+	}
+
+	private void updateFromModel() {
+		actionDisplayZone.getChildren().clear();
+		actionDisplayZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
+	}
+	
+	private void updateToModel() {
+		this.model.setActionList(getActionList(null));
+	}
+
 	@FXML
 	void add(ActionEvent event) {
 		addNewInputField();
 	}
 
 	@FXML
-	void remove(ActionEvent event) {
-		removeTheLastInputField();
+	void clearLog(ActionEvent event) {
+		LogUtils.clearLog(logConsole);
 	}
 
 	@FXML
@@ -129,28 +201,15 @@ public class FormuleController {
 					e.printStackTrace();
 					throw new CompletionException(e);
 				}
-			}).whenComplete((i, t) -> threadJobCompleted("Configuration file load succed"));
+			}).whenComplete((i, t) -> threadJobCompleted("Configuration file load finished"));
 		} else {
 			taskCancelled("No file to load selected");
 		}
 	}
 
-	private void threadJobCompleted(String completionMessage) {
-		addLogLater(Level.DEBUG, completionMessage);
-		Platform.runLater(() -> activateButtons());
-	}
-
-	private ObjectMapper getObjectMapper() {
-		final ObjectMapper mapper = new ObjectMapper();
-		return mapper;
-	}
-
-	private List<ActionInput> loadFromObjectList(final List<AbstractAction> actionList) {
-		List<ActionInput> actionInputList = new ArrayList<>();
-		for (AbstractAction action : actionList) {
-			actionInputList.add(action.toActionInput());
-		}
-		return actionInputList;
+	@FXML
+	void remove(ActionEvent event) {
+		removeTheLastInputField();
 	}
 
 	@FXML
@@ -177,7 +236,7 @@ public class FormuleController {
 							e.printStackTrace();
 							throw new CompletionException(e);
 						}
-					}).whenComplete((i, t) -> threadJobCompleted("Configuration file save succed"));
+					}).whenComplete((i, t) -> threadJobCompleted("Configuration file save finished"));
 				} else {
 					taskCancelled("No file to save selected");
 				}
@@ -189,61 +248,6 @@ public class FormuleController {
 			activateButtons();
 			throw e;
 		}
-	}
-
-	private void taskCancelled(String cancelMessage) {
-		addLog(Level.DEBUG, cancelMessage);
-		activateButtons();
-	}
-
-	private FileChooser getFileChooser(String fileChooserName) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(fileChooserName);
-		return fileChooser;
-	}
-
-	private void updateFromModel() {
-		actionDisplayZone.getChildren().clear();
-		actionDisplayZone.getChildren().addAll(loadFromObjectList(this.model.getActionList()));
-	}
-
-	private void updateToModel() {
-		this.model.setActionList(getActionList(null));
-	}
-
-	private List<AbstractAction> getActionList(@Nullable final WebDriver webDriver) {
-		final List<AbstractAction> actionList = new ArrayList<>();
-		for (Node node : actionDisplayZone.getChildrenUnmodifiable()) {
-			if (node instanceof ActionInput) {
-				final ActionInput actionInput = (ActionInput) node;
-				try {
-					final AbstractAction action = actionInput.toAction();
-					if (null != webDriver) {
-						action.setWebDriver(webDriver);
-					}
-					actionList.add(action);
-				} catch (LoggedException e) {
-					addLogLater(e.getLogLevel(), e.getMessage());
-					if (Level.ERROR == e.getLogLevel()) {
-						throw e;
-					}
-				}
-			}
-		}
-		return actionList;
-	}
-
-	@FXML
-	void clearLog(ActionEvent event) {
-		LogUtils.clearLog(logConsole);
-	}
-
-	public final void addLog(Level level, String message) {
-		LogUtils.addLog(logConsole, level, message);
-	}
-
-	public final void addLogLater(Level level, String message) {
-		Platform.runLater(() -> addLog(level, message));
 	}
 
 	@FXML

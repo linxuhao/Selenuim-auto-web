@@ -28,45 +28,6 @@ public class ActionWithNextCondition extends AbstractAction {
 		this.retryIfNotNext = retryIfNotNext;
 	}
 
-	public final NextConditionType getNextConditionType() {
-		return nextConditionType;
-	}
-
-	public final String getNextCondition() {
-		return nextCondition;
-	}
-
-	public final boolean isRetryIfNotNext() {
-		return retryIfNotNext;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + Objects.hash(nextCondition, nextConditionType, retryIfNotNext);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ActionWithNextCondition other = (ActionWithNextCondition) obj;
-		return Objects.equals(nextCondition, other.nextCondition) && nextConditionType == other.nextConditionType
-				&& retryIfNotNext == other.retryIfNotNext;
-	}
-
-	@Override
-	public String subToString() {
-		return "nextConditionType=" + nextConditionType + ", nextCondition=" + nextCondition + ", retryIfNotNext="
-				+ retryIfNotNext;
-	}
-
 	@Override
 	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) throws Exception {
 		int httpCode = -1;
@@ -85,6 +46,64 @@ public class ActionWithNextCondition extends AbstractAction {
 			throw new LoggedException(Level.ERROR,
 					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ActionWithNextCondition other = (ActionWithNextCondition) obj;
+		return Objects.equals(nextCondition, other.nextCondition) && nextConditionType == other.nextConditionType
+				&& retryIfNotNext == other.retryIfNotNext;
+	}
+
+	public final String getNextCondition() {
+		return nextCondition;
+	}
+
+	public final NextConditionType getNextConditionType() {
+		return nextConditionType;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(nextCondition, nextConditionType, retryIfNotNext);
+		return result;
+	}
+
+	public final boolean isRetryIfNotNext() {
+		return retryIfNotNext;
+	}
+
+	@Override
+	public String subToString() {
+		return "nextConditionType=" + nextConditionType + ", nextCondition=" + nextCondition + ", retryIfNotNext="
+				+ retryIfNotNext;
+	}
+
+	private boolean evaluateNextCondition(final BiConsumer<Level, String> logConsumer,final int httpCode) throws NumberFormatException, InterruptedException {
+		boolean result = false;
+		switch (getNextConditionType()) {
+		case HTTP_CODE:
+			if (Integer.parseInt(nextCondition) == httpCode) {
+				result = true;
+			}
+			break;
+		case DELAY_MILISECONDS:
+			produceLog(logConsumer, Level.DEBUG, "Delaying for " + nextCondition + " milliseconds before next action");
+			Thread.sleep(Integer.parseInt(nextCondition));
+		case NO_CONDITION:
+		default:
+			result = true;
+			break;
+		}
+		return result;
 	}
 
 	private void retryOnCondition(final BiConsumer<Level, String> logConsumer, final int httpCode, final int retryTimes)
@@ -111,25 +130,6 @@ public class ActionWithNextCondition extends AbstractAction {
 				}
 			}
 		}
-	}
-
-	private boolean evaluateNextCondition(final BiConsumer<Level, String> logConsumer,final int httpCode) throws NumberFormatException, InterruptedException {
-		boolean result = false;
-		switch (getNextConditionType()) {
-		case HTTP_CODE:
-			if (Integer.parseInt(nextCondition) == httpCode) {
-				result = true;
-			}
-			break;
-		case DELAY_MILISECONDS:
-			produceLog(logConsumer, Level.DEBUG, "Delaying for " + nextCondition + " milliseconds before next action");
-			Thread.sleep(Integer.parseInt(nextCondition));
-		case NO_CONDITION:
-		default:
-			result = true;
-			break;
-		}
-		return result;
 	}
 
 	@Override

@@ -24,35 +24,6 @@ public class ActionWithContent extends AbstractAction {
 		this.content = content;
 	}
 
-	public final String getContent() {
-		return content;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + Objects.hash(content);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ActionWithContent other = (ActionWithContent) obj;
-		return Objects.equals(content, other.content);
-	}
-
-	@Override
-	public String subToString() {
-		return "content=" + content;
-	}
-
 	@Override
 	public void doSubAction(final BiConsumer<Level, String> logConsumer, final int retryTimes) {
 
@@ -75,6 +46,35 @@ public class ActionWithContent extends AbstractAction {
 					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
 
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ActionWithContent other = (ActionWithContent) obj;
+		return Objects.equals(content, other.content);
+	}
+
+	public final String getContent() {
+		return content;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(content);
+		return result;
+	}
+
+	@Override
+	public String subToString() {
+		return "content=" + content;
 	}
 
 	@Override

@@ -22,6 +22,14 @@ import utils.WebDriverUtils;
  */
 public class AutoWebApplication extends Application {
     
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        WebDriverUtils.setupWebDriver();
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) throws IOException {
     	
@@ -40,14 +48,6 @@ public class AutoWebApplication extends Application {
         primaryStage.setTitle("Linxuhao's Automatic Web Task");
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-    	WebDriverUtils.setWebDriverSystemProperty();
-        launch(args);
     }
     
 }

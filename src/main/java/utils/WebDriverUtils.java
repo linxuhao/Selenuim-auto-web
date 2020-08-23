@@ -1,5 +1,16 @@
 package utils;
 
+import static constants.SeleniumXPathConstants.ATTRIBUTE_CLASSNAME;
+import static constants.SeleniumXPathConstants.ATTRIBUTE_ID;
+import static constants.SeleniumXPathConstants.ATTRIBUTE_NAME;
+import static constants.SeleniumXPathConstants.ATTRIBUTE_PLACEHOLDER;
+import static constants.SeleniumXPathConstants.ATTRIBUTE_TEXT;
+import static constants.SeleniumXPathConstants.ATTRIBUTE_VALUE;
+import static constants.SeleniumXPathConstants.TAG_BUTTON;
+import static constants.SeleniumXPathConstants.TAG_INPUT;
+import static constants.SeleniumXPathConstants.TAG_LINK;
+import static constants.SeleniumXPathConstants.TAG_SELECT;
+
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,19 +29,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.Select;
 
 import customExceptions.LoggedException;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.client.ClientUtil;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_CLASSNAME;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_ID;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_NAME;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_TEXT;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_VALUE;
-import static constants.SeleniumXPathConstants.ATTRIBUTE_PLACEHOLDER;
-import static constants.SeleniumXPathConstants.TAG_BUTTON;
-import static constants.SeleniumXPathConstants.TAG_INPUT;
-import static constants.SeleniumXPathConstants.TAG_LINK;
-import static constants.SeleniumXPathConstants.TAG_SELECT;
 
 public class WebDriverUtils {
 
@@ -38,6 +40,10 @@ public class WebDriverUtils {
 
 	private static BrowserMobProxy proxy;
 	private static final Map<String, Integer> urlToResponseCodeMap = new HashMap<>();
+
+	public static final void setupWebDriver() {
+		WebDriverManager.chromedriver().setup();
+	}
 
 	synchronized public static final BrowserMobProxy getBrowserMobProxy() {
 		if (null == proxy) {
@@ -49,25 +55,13 @@ public class WebDriverUtils {
 		}
 		return proxy;
 	}
-
+	
 	public static final WebDriver getNewWebDriver() {
 		final Proxy seleniumProxy = ClientUtil.createSeleniumProxy(getBrowserMobProxy());
 		final ChromeOptions options = new ChromeOptions();
 		options.setProxy(seleniumProxy);
 		options.addArguments("--ignore-certificate-errors");
 		return new ChromeDriver(options);
-	}
-
-	/**
-	 * 
-	 * @param driver
-	 * @param url
-	 * @param wantHttpCode
-	 * @return httpcode of the action, -1 if dont want http code
-	 */
-	public static final int navigate(final WebDriver driver, final String url) {
-		driver.navigate().to(url);
-		return getHttpCode(driver);
 	}
 
 	/**
@@ -98,6 +92,29 @@ public class WebDriverUtils {
 			throw new LoggedException(Level.ERROR, "Fill, Couldnt find the target " + target);
 		}
 	}
+	
+	/**
+	 * Get the http response code of the currently displayed page
+	 * 
+	 * @param driver
+	 * @return
+	 */
+	public static final int getHttpCode(final WebDriver driver) {
+		final String url = driver.getCurrentUrl();
+		return urlToResponseCodeMap.getOrDefault(url, HTTP_CODE_URL_NOT_FOUND);
+	}
+	
+	/**
+	 * 
+	 * @param driver
+	 * @param url
+	 * @param wantHttpCode
+	 * @return httpcode of the action, -1 if dont want http code
+	 */
+	public static final int navigate(final WebDriver driver, final String url) {
+		driver.navigate().to(url);
+		return getHttpCode(driver);
+	}
 
 	public static void select(final WebDriver driver, final String target, final String content) {
 		final WebElement element = findByXPathQuerySupplier(driver,
@@ -108,55 +125,6 @@ public class WebDriverUtils {
 		} else {
 			throw new LoggedException(Level.ERROR, "Select, Couldnt find the target " + target);
 		}
-	}
-
-	private static WebElement findByXPathQuerySupplier(final WebDriver driver,
-			final Supplier<List<String>> querySupplier) {
-		return findByXPathQueryList(driver, querySupplier.get());
-	}
-
-	/**
-	 * <b>Priority : </b><br>
-	 * id, <br>
-	 * placeholder,<br>
-	 * name,<br>
-	 * value,<br>
-	 * classname<br>
-	 * 
-	 * @return
-	 */
-	private static List<String> createSimpleElementFindXPathQueryList(final String tagName, final String target) {
-		final String byId = createSimpleXPathQuery(tagName, ATTRIBUTE_ID, target);
-		final String byPlaceholder = createSimpleXPathQuery(tagName, ATTRIBUTE_PLACEHOLDER, target);
-		final String byName = createSimpleXPathQuery(tagName, ATTRIBUTE_NAME, target);
-		final String byValue = createSimpleXPathQuery(tagName, ATTRIBUTE_VALUE, target);
-		final String byClassname = createSimpleXPathQuery(tagName, ATTRIBUTE_CLASSNAME, target);
-		return Arrays.asList(byId, byPlaceholder, byName, byValue, byClassname);
-	}
-
-	/**
-	 * 
-	 * @param tagname
-	 * @param attributeName
-	 * @param target
-	 * @return xpath=//{tagname}[contains(@{attributeName},'{target}')]
-	 */
-	private static String createSimpleXPathQuery(final String tagname, final String attributeName,
-			final String target) {
-		return String.format(StringEscapeUtils.escapeJava("//%s[contains(@%s,'%s')]"), tagname, attributeName,
-				target);
-	}
-
-	/**
-	 * https://stackoverflow.com/questions/23078308/selenium-and-xpath-locating-a-link-by-containing-text
-	 * 
-	 * @param tagname
-	 * @param target
-	 * @return xpath=//{tagname}[text()[contains(.,'{target}')]]"
-	 */
-	private static String createTextXPathQuery(final String tagname, final String target) {
-		return String.format(StringEscapeUtils.escapeJava("//%s[%s[contains(.,'%s')]]"), tagname, ATTRIBUTE_TEXT,
-				target);
 	}
 
 	/**
@@ -204,6 +172,50 @@ public class WebDriverUtils {
 	}
 
 	/**
+	 * <b>Priority : </b><br>
+	 * id, <br>
+	 * placeholder,<br>
+	 * name,<br>
+	 * value,<br>
+	 * classname<br>
+	 * 
+	 * @return
+	 */
+	private static List<String> createSimpleElementFindXPathQueryList(final String tagName, final String target) {
+		final String byId = createSimpleXPathQuery(tagName, ATTRIBUTE_ID, target);
+		final String byPlaceholder = createSimpleXPathQuery(tagName, ATTRIBUTE_PLACEHOLDER, target);
+		final String byName = createSimpleXPathQuery(tagName, ATTRIBUTE_NAME, target);
+		final String byValue = createSimpleXPathQuery(tagName, ATTRIBUTE_VALUE, target);
+		final String byClassname = createSimpleXPathQuery(tagName, ATTRIBUTE_CLASSNAME, target);
+		return Arrays.asList(byId, byPlaceholder, byName, byValue, byClassname);
+	}
+
+	/**
+	 * 
+	 * @param tagname
+	 * @param attributeName
+	 * @param target
+	 * @return xpath=//{tagname}[contains(@{attributeName},'{target}')]
+	 */
+	private static String createSimpleXPathQuery(final String tagname, final String attributeName,
+			final String target) {
+		return String.format(StringEscapeUtils.escapeJava("//%s[contains(@%s,'%s')]"), tagname, attributeName,
+				target);
+	}
+
+	/**
+	 * https://stackoverflow.com/questions/23078308/selenium-and-xpath-locating-a-link-by-containing-text
+	 * 
+	 * @param tagname
+	 * @param target
+	 * @return xpath=//{tagname}[text()[contains(.,'{target}')]]"
+	 */
+	private static String createTextXPathQuery(final String tagname, final String target) {
+		return String.format(StringEscapeUtils.escapeJava("//%s[%s[contains(.,'%s')]]"), tagname, ATTRIBUTE_TEXT,
+				target);
+	}
+
+	/**
 	 * Find by priority in the list, the smaller the index in the query list, the
 	 * higher the priority
 	 * 
@@ -222,18 +234,8 @@ public class WebDriverUtils {
 		return null;
 	}
 
-	/**
-	 * Get the http response code of the currently displayed page
-	 * 
-	 * @param driver
-	 * @return
-	 */
-	public static final int getHttpCode(final WebDriver driver) {
-		final String url = driver.getCurrentUrl();
-		return urlToResponseCodeMap.getOrDefault(url, HTTP_CODE_URL_NOT_FOUND);
-	}
-
-	public static final void setWebDriverSystemProperty() {
-		System.setProperty("webdriver.chrome.driver", "src/main/resources/webDrivers/chromedriver.exe");
+	private static WebElement findByXPathQuerySupplier(final WebDriver driver,
+			final Supplier<List<String>> querySupplier) {
+		return findByXPathQueryList(driver, querySupplier.get());
 	}
 }

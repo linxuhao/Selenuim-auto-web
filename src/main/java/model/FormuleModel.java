@@ -9,14 +9,14 @@ public class FormuleModel {
 	
 	private List<AbstractAction> actionList;
 	
-	public FormuleModel(List<AbstractAction> actionList) {
-		super();
-		this.actionList = actionList;
-	}
-
 	public FormuleModel() {
 		super();
 		this.actionList = new ArrayList<>();
+	}
+
+	public FormuleModel(List<AbstractAction> actionList) {
+		super();
+		this.actionList = actionList;
 	}
 
 	public List<AbstractAction> getActionList() {

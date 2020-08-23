@@ -14,19 +14,19 @@ public class DateTimeUtils {
 		return LocalTime.parse(time);
 	}
 
-	public static final LocalDateTime toTodayDateTime(final String localTime) throws DateTimeParseException {
-		return toTodayDateTime(toLocalTime(localTime));
-	}
-
 	public static final LocalDateTime toTodayDateTime(final LocalTime localTime) {
 		return LocalDateTime.of(LocalDate.now(), localTime);
 	}
+
+	public static final LocalDateTime toTodayDateTime(final String localTime) throws DateTimeParseException {
+		return toTodayDateTime(toLocalTime(localTime));
+	}
 	
-	public static final LocalDateTime toTomorrowDateTime(final String localTime) throws DateTimeParseException {
+	public static final LocalDateTime toTomorrowDateTime(final LocalTime localTime) {
 		return toTodayDateTime(localTime).plusDays(1);
 	}
 
-	public static final LocalDateTime toTomorrowDateTime(final LocalTime localTime) {
+	public static final LocalDateTime toTomorrowDateTime(final String localTime) throws DateTimeParseException {
 		return toTodayDateTime(localTime).plusDays(1);
 	}
 

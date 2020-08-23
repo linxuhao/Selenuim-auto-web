@@ -1,11 +1,11 @@
 # Selenuim-auto-web
-``Codeless Automatc web tasking Gui with selenium``
+``Codeless Automatc web tasking Gui with selenium`` 
+
+MVC
 
 Maven project using [JavaFx](https://openjfx.io/openjfx-docs/) and [Selenium](https://www.selenium.dev/documentation/en/getting_started/) to run web tasks automaticly
 
-MVC 
-
-Runs with Windows and chrome version 84 to match with the embedded [chrome driver version 84](https://chromedriver.storage.googleapis.com/index.html?path=84.0.4147.30/)
+Runs with chrome (Using [WebDriverManager](https://github.com/bonigarcia/webdrivermanager) to manage WebDriver needed by Selenium)
 
 ## How to use
 
