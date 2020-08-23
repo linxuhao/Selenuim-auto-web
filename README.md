@@ -7,7 +7,13 @@ Maven project using [JavaFx](https://openjfx.io/openjfx-docs/) and [Selenium](ht
 
 Runs with chrome (Using [WebDriverManager](https://github.com/bonigarcia/webdrivermanager) to manage WebDriver needed by Selenium)
 
+The loading gif is from [Loading.id](https://loading.io/)
+
+Loading screen with preloader from [this tutorial](https://blog.codecentric.de/en/2015/09/javafx-how-to-easily-implement-application-preloader-2/)
+
 ## How to use
+
+The first start up of the app may takes a little while because
 
 The ``GUI has 3 parts`` : **Action List** at the top left, **output console** at the top right and **button zone** at the bottom
 
