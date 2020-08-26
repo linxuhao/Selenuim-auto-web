@@ -15,7 +15,7 @@ Loading screen with preloader from [this tutorial](https://blog.codecentric.de/e
 
 [Download](https://github.com/linxuhao/Selenuim-auto-web/releases/latest/download/autoweb.jar) ``Latest Release``
 
-The first start up of the app may takes a little while because
+The first start up of the app may takes a little while
 
 The ``GUI has 3 parts`` : **Action List** at the top left, **output console** at the top right and **button zone** at the bottom
 
