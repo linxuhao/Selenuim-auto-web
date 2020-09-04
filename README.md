@@ -1,5 +1,5 @@
 # Selenuim-auto-web
-``Codeless Automatc web tasking Gui with selenium`` 
+``Codeless Automatic web tasking Gui with selenium`` 
 
 MVC
 
