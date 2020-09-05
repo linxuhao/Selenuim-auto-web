@@ -1,8 +1,8 @@
 package actions;
 
-import java.lang.System.Logger.Level;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 
 import constants.ActionType;
 import controller.ActionInput;
@@ -29,7 +29,7 @@ public class ActionWithContent extends AbstractAction {
 
 		switch (getActionType()) {
 		case SELECT:
-			produceLog(logConsumer, Level.DEBUG, "Selecting  " + getTarget() + "'s value to " + getContent());
+			produceLog(logConsumer, Level.FINER, "Selecting  " + getTarget() + "'s value to " + getContent());
 			WebDriverUtils.select(getWebDriver(), getTarget(), getContent());
 			break;
 		case FILL:
@@ -37,12 +37,12 @@ public class ActionWithContent extends AbstractAction {
 				final String reason = "No content to fill specified";
 				produceLog(logConsumer, Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
 			} else {
-				produceLog(logConsumer, Level.DEBUG, "Filling  " + getTarget() + "'s value to " + getContent());
+				produceLog(logConsumer, Level.FINER, "Filling  " + getTarget() + "'s value to " + getContent());
 				WebDriverUtils.fill(getWebDriver(), getTarget(), getContent());
 			}
 			break;
 		default:
-			throw new LoggedException(Level.ERROR,
+			throw new LoggedException(Level.SEVERE,
 					"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 		}
 

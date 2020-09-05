@@ -1,12 +1,12 @@
 package actions;
 
-import java.lang.System.Logger.Level;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 
 import org.openqa.selenium.WebDriver;
 
@@ -42,16 +42,16 @@ public abstract class AbstractAction {
 
 	public void doAction(final BiConsumer<Level, String> logConsumer) throws Exception {
 		if (null == webDriver) {
-			throw new LoggedException(Level.ERROR, "No web driver set");
+			throw new LoggedException(Level.SEVERE, "No web driver set");
 		}
 		try {
 			waitUntillExecutionTime(logConsumer);
 		} catch (DateTimeParseException e) {
 			final String reason = "Unknow execution time, execution will not wait its execution time (it doesn't have one)";
-			produceLog(logConsumer, Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
+			produceLog(logConsumer, Level.FINE, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
 		} catch (Exception e) {
 			final String reason = "Wait until execution time failed, executing now";
-			produceLog(logConsumer, Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
+			produceLog(logConsumer, Level.FINE, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
 		} finally {
 			doSubAction(logConsumer, RETRY_TIMES);
 		}
@@ -132,11 +132,11 @@ public abstract class AbstractAction {
 			if (executionDateTime.isBefore(now.minusHours(1))) {
 				//if I schedule a time 1 hours before now, 
 				//I assume that i want it to be executed tomorrow
-				produceLog(logConsumer, Level.DEBUG, "The execution time is " + getExecutionTime()
+				produceLog(logConsumer, Level.FINER, "The execution time is " + getExecutionTime()
 						+ ", It is at least 1 hours before now, so i assume you want it to be executed tomorrow");
 				executionDateTime = executionDateTime.plusDays(1);
 			}else {
-				produceLog(logConsumer, Level.DEBUG, "The execution time is " + getExecutionTime()
+				produceLog(logConsumer, Level.FINER, "The execution time is " + getExecutionTime()
 				+ ", It is within 1 hours before now, so i guess you want it to be executed immediatly");
 			}
 		}
@@ -151,7 +151,7 @@ public abstract class AbstractAction {
 		while (now.isBefore(executionDateTime) && !now.isEqual(executionDateTime)) {
 			final long timeBeforeExecution = now.until(executionDateTime, ChronoUnit.MILLIS);
 			final long sleepTimeInMilli = timeBeforeExecution;
-			produceLog(logConsumer, Level.DEBUG, "The execution time is " + executionDateTime.toString() + ", now is "
+			produceLog(logConsumer, Level.FINER, "The execution time is " + executionDateTime.toString() + ", now is "
 					+ now.toString() + ", sleeping for " + sleepTimeInMilli + " milliseconds before next check");
 			Thread.sleep(sleepTimeInMilli);
 			now = LocalDateTime.now();

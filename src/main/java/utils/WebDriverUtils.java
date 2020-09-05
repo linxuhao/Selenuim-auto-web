@@ -11,13 +11,13 @@ import static constants.SeleniumXPathConstants.TAG_INPUT;
 import static constants.SeleniumXPathConstants.TAG_LINK;
 import static constants.SeleniumXPathConstants.TAG_SELECT;
 
-import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.openqa.selenium.By;
@@ -78,7 +78,7 @@ public class WebDriverUtils {
 		if (null != element) {
 			element.click();
 		} else {
-			throw new LoggedException(Level.ERROR, "Click, Couldnt find the target " + target);
+			throw new LoggedException(Level.SEVERE, "Click, Couldnt find the target " + target);
 		}
 		return getHttpCode(driver);
 	}
@@ -89,7 +89,7 @@ public class WebDriverUtils {
 		if (null != element) {
 			element.sendKeys(content);
 		} else {
-			throw new LoggedException(Level.ERROR, "Fill, Couldnt find the target " + target);
+			throw new LoggedException(Level.SEVERE, "Fill, Couldnt find the target " + target);
 		}
 	}
 
@@ -123,7 +123,7 @@ public class WebDriverUtils {
 			final Select selectElement = new Select(element);
 			selectElement.selectByVisibleText(content);
 		} else {
-			throw new LoggedException(Level.ERROR, "Select, Couldnt find the target " + target);
+			throw new LoggedException(Level.SEVERE, "Select, Couldnt find the target " + target);
 		}
 	}
 	

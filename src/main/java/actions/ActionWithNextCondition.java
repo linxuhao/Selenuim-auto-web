@@ -1,8 +1,9 @@
 package actions;
 
-import java.lang.System.Logger.Level;
+
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 
 import constants.ActionType;
 import constants.NextConditionType;
@@ -33,24 +34,24 @@ public class ActionWithNextCondition extends AbstractAction {
 		int httpCode = -1;
 		if (retryTimes < RETRY_TIMES) {
 			//retry case
-			produceLog(logConsumer, Level.DEBUG, "Refreshing current page " + getTarget());
+			produceLog(logConsumer, Level.FINER, "Refreshing current page " + getTarget());
 			httpCode = WebDriverUtils.refresh(getWebDriver());
 			retryOnCondition(logConsumer, httpCode, retryTimes);
 		} else {
 			//No retry case
 			switch (getActionType()) {
 			case NAVIGATE:
-				produceLog(logConsumer, Level.DEBUG, "Navigating to " + getTarget());
+				produceLog(logConsumer, Level.FINER, "Navigating to " + getTarget());
 				httpCode = WebDriverUtils.navigate(getWebDriver(), getTarget());
 				retryOnCondition(logConsumer, httpCode, retryTimes);
 				break;
 			case CLICK:
-				produceLog(logConsumer, Level.DEBUG, "Clicking " + getTarget());
+				produceLog(logConsumer, Level.FINER, "Clicking " + getTarget());
 				httpCode = WebDriverUtils.click(getWebDriver(), getTarget());
 				retryOnCondition(logConsumer, httpCode, retryTimes);
 				break;
 			default:
-				throw new LoggedException(Level.ERROR,
+				throw new LoggedException(Level.SEVERE,
 						"Unsupported action type: " + getActionType() + " for the class: " + getClass());
 			}
 		}
@@ -106,7 +107,7 @@ public class ActionWithNextCondition extends AbstractAction {
 			}
 			break;
 		case DELAY_MILISECONDS:
-			produceLog(logConsumer, Level.DEBUG, "Delaying for " + nextCondition + " milliseconds before next action");
+			produceLog(logConsumer, Level.FINER, "Delaying for " + nextCondition + " milliseconds before next action");
 			Thread.sleep(Integer.parseInt(nextCondition));
 		case NO_CONDITION:
 		default:
@@ -129,10 +130,10 @@ public class ActionWithNextCondition extends AbstractAction {
 						+ httpCode + "\nWhich is not the next condition : " + nextCondition);
 				if (retryIfNotNext && retryTimes > 0) {
 					final int retryTimeLeft = retryTimes - 1;
-					produceLog(logConsumer, Level.DEBUG, "Retrying, " + retryTimeLeft + " attemp left");
+					produceLog(logConsumer, Level.FINER, "Retrying, " + retryTimeLeft + " attemp left");
 					doSubAction(logConsumer, retryTimeLeft);
 				} else {
-					throw new LoggedException(Level.ERROR, "Action failed");
+					throw new LoggedException(Level.SEVERE, "Action failed");
 				}
 			}
 		}

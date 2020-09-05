@@ -1,6 +1,6 @@
 package customExceptions;
 
-import java.lang.System.Logger.Level;
+import java.util.logging.Level;
 
 public class LoggedException extends RuntimeException{
 

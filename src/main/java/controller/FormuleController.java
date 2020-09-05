@@ -1,12 +1,12 @@
 package controller;
 
 import java.io.File;
-import java.lang.System.Logger.Level;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.logging.Level;
 import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
@@ -136,7 +136,7 @@ public class FormuleController {
 					actionList.add(action);
 				} catch (LoggedException e) {
 					addLogLater(e.getLogLevel(), e.getMessage());
-					if (Level.ERROR == e.getLogLevel()) {
+					if (Level.SEVERE == e.getLogLevel()) {
 						throw e;
 					}
 				}
@@ -176,12 +176,12 @@ public class FormuleController {
 	}
 
 	private void taskCancelled(String cancelMessage) {
-		addLog(Level.DEBUG, cancelMessage);
+		addLog(Level.FINER, cancelMessage);
 		activateButtons();
 	}
 
 	private void threadJobCompleted(final Integer currentLaunchIndex, final String completionMessage) {
-		addLogLater(currentLaunchIndex, Level.DEBUG, completionMessage);
+		addLogLater(currentLaunchIndex, Level.FINER, completionMessage);
 		Platform.runLater(() -> activateButtons());
 	}
 
@@ -218,7 +218,7 @@ public class FormuleController {
 					this.model = model;
 					Platform.runLater(() -> updateFromModel());
 				} catch (Exception e) {
-					addLogLater(Level.ERROR, e.getMessage());
+					addLogLater(Level.SEVERE, e.getMessage());
 					// for IDE consol debug purpose xD
 					e.printStackTrace();
 					throw new CompletionException(e);
@@ -245,7 +245,7 @@ public class FormuleController {
 				final File file = fileChooser.showSaveDialog(primaryStage);
 				updateToModel();
 				if (null != file) {
-					addLog(Level.DEBUG, "Saving configuration to file : " + file.getAbsolutePath());
+					addLog(Level.FINER, "Saving configuration to file : " + file.getAbsolutePath());
 					CompletableFuture.runAsync(() -> {
 						// Write to file in another thread to not block UI
 						// Even though i blocked all buttons when writting xD
@@ -253,7 +253,7 @@ public class FormuleController {
 							final ObjectMapper mapper = getObjectMapper();
 							mapper.writeValue(file, model);
 						} catch (Exception e) {
-							addLogLater(Level.ERROR, e.getMessage());
+							addLogLater(Level.SEVERE, e.getMessage());
 							// for IDE consol debug purpose xD
 							e.printStackTrace();
 							throw new CompletionException(e);
@@ -266,7 +266,7 @@ public class FormuleController {
 				taskCancelled("No action to save");
 			}
 		} catch (Exception e) {
-			addLog(Level.ERROR, e.getMessage());
+			addLog(Level.SEVERE, e.getMessage());
 			activateButtons();
 			throw e;
 		}
@@ -281,17 +281,17 @@ public class FormuleController {
 				try {
 					final WebDriver webDriver = WebDriverUtils.getNewWebDriver();
 					final List<AbstractAction> actionList = getActionList(webDriver);
-					addLogLater(currentLaunchIndex, Level.DEBUG, "There are total of " + actionList.size() + " actions to execute");
+					addLogLater(currentLaunchIndex, Level.FINER, "There are total of " + actionList.size() + " actions to execute");
 					for (int i = 0; i < actionList.size(); i++) {
 						final int humainReadableActionIndex = i + 1;
-						addLogLater(currentLaunchIndex, Level.DEBUG,
+						addLogLater(currentLaunchIndex, Level.FINER,
 								"Executing action " + humainReadableActionIndex + " out of " + actionList.size());
 						try {
 							actionList.get(i).doAction((level, message) -> addLogLater(currentLaunchIndex, level, message));
 						} catch (LoggedException e) {
 							// Stops the execution if is error level exception,
 							// otherwise stop & skip only the current action
-							if (Level.ERROR == e.getLogLevel()) {
+							if (Level.SEVERE == e.getLogLevel()) {
 								throw e;
 							} else {
 								addLogLater(currentLaunchIndex, e.getLogLevel(), e.getMessage());
@@ -299,7 +299,7 @@ public class FormuleController {
 						}
 					}
 				} catch (Exception e) {
-					addLogLater(currentLaunchIndex, Level.ERROR, e.getMessage());
+					addLogLater(currentLaunchIndex, Level.SEVERE, e.getMessage());
 					// for IDE consol debug purpose xD
 					e.printStackTrace();
 					throw new CompletionException(e);

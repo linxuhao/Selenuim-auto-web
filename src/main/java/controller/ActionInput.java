@@ -1,7 +1,7 @@
 package controller;
 
 import java.io.IOException;
-import java.lang.System.Logger.Level;
+import java.util.logging.Level;
 
 import actions.AbstractAction;
 import actions.ActionWithContent;
