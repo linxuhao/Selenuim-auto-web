@@ -3,6 +3,8 @@ package controller;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import org.apache.commons.lang3.StringUtils;
+
 import actions.AbstractAction;
 import actions.ActionWithContent;
 import actions.ActionWithNextCondition;
@@ -102,7 +104,7 @@ public class ActionInput extends VBox {
 		final ActionType actionType = this.actionTypeSelect.getSelectionModel().getSelectedItem();
 		final NextConditionType nextConditionType = this.nextConditionTypeSelect.getSelectionModel().getSelectedItem();
 		final String targetString = target.getText();
-		if (targetString.isBlank()) {
+		if (StringUtils.isBlank(targetString)) {
 			final String reason = "No target locator Specified";
 			throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
 		}
@@ -110,7 +112,7 @@ public class ActionInput extends VBox {
 		case CLICK:
 		case NAVIGATE:
 			final String nextConditionString = nextCondition.getText();
-			if (NextConditionType.NO_CONDITION != nextConditionType && nextConditionString.isBlank()) {
+			if (NextConditionType.NO_CONDITION != nextConditionType && StringUtils.isBlank(nextConditionString)) {
 				final String reason = "No Next Condition specified (Http code or delay in millisecond)";
 				throw createLoggedException(Level.WARNING, LogUtils.WARNING_MESSAGE_TEMPALTE, reason);
 			}

@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 
+import org.apache.commons.lang3.StringUtils;
+
 import constants.ActionType;
 import controller.ActionInput;
 import customExceptions.LoggedException;
@@ -33,7 +35,7 @@ public class ActionWithContent extends AbstractAction {
 			WebDriverUtils.select(getWebDriver(), getTarget(), getContent());
 			break;
 		case FILL:
-			if (content.isBlank()) {
+			if (StringUtils.isBlank(content)) {
 				final String reason = "No content to fill specified";
 				produceLog(logConsumer, Level.INFO, String.format(LogUtils.INFO_MESSAGE_TEMPLATE, reason));
 			} else {
